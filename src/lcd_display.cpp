@@ -53,6 +53,8 @@ void ligarBacklight() {
     lcdLigado = true;
 
     ultimaInteracaoLCD = millis();
+
+    ultimoLCD = 0;
 }
 
 void desligarBacklight() {
@@ -336,6 +338,18 @@ void telaErro(
 
 void atualizarLCD() {
 
+    if (
+        lcdLigado &&
+        millis() - ultimaInteracaoLCD >= TEMPO_LCD
+    ) {
+
+        desligarBacklight();
+    }
+
+    if (!lcdLigado) {
+        return;
+    }
+
     unsigned long intervalo =
         configVolumeAtivo ? INTERVALO_PISCAR_LCD : INTERVALO_LCD;
 
@@ -344,18 +358,6 @@ void atualizarLCD() {
     }
 
     ultimoLCD = millis();
-
-    // =========================
-    // BACKLIGHT AUTO OFF
-    // =========================
-
-    if (
-        lcdLigado &&
-        millis() - ultimaInteracaoLCD >= TEMPO_LCD
-    ) {
-
-        desligarBacklight();
-    }
 
     // =========================
     // ESTADOS
@@ -426,10 +428,10 @@ void atualizarLCD() {
         case ERRO: {
 
             if (erroSemFluxo) {
-                escreverLinhaLcd(0, " ERRO SEM FLUX");
+                escreverLinhaLcd(0, " ERRO SEM FLUXO");
             }
             else if (erroTimeout) {
-                escreverLinhaLcd(0, "    TIMEOUT");
+                escreverLinhaLcd(0, " ERRO TIMEOUT");
             }
             else {
                 escreverLinhaLcd(0, " ERRO SISTEMA");

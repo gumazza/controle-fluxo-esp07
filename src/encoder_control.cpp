@@ -179,47 +179,28 @@ void cliqueSimples() {
 
     if (estadoSistema == TIMER_OFF) {
 
-        if (tempoTimer > 0) {
-
-            estadoSistema = TIMER_ON;
-
-            tempoRestanteTimer = tempoTimer;
-
-            timerRodando = true;
-        }
+        iniciarContagemTimer();
 
         return;
     }
 
     if (estadoSistema == TIMER_ON) {
 
-        estadoSistema = TIMER_PAUSA;
-
-        timerPausado = true;
+        pausarContagemTimer();
 
         return;
     }
 
     if (estadoSistema == TIMER_PAUSA) {
 
-        estadoSistema = TIMER_ON;
-
-        timerPausado = false;
+        retomarContagemTimer();
 
         return;
     }
 
     if (estadoSistema == ERRO) {
 
-        erroSemFluxo = false;
-
-        erroTimeout = false;
-
-        resetarWatchdogs();
-
-        fecharValvula();
-
-        estadoSistema = STANDBY;
+        sairErro();
 
         return;
     }
@@ -321,13 +302,7 @@ void longPress() {
         estadoSistema == TIMER_PAUSA
     ) {
 
-        timerRodando = false;
-
-        timerPausado = false;
-
-        estadoSistema = STANDBY;
-
-        marcarLcdSujo();
+        cancelarTimer();
 
         return;
     }
@@ -352,11 +327,7 @@ void controlarBotaoEncoder() {
 
         if (millis() - timerComboPress >= TEMPO_LONG_PRESS) {
 
-            estadoSistema = TIMER_OFF;
-
-            timerRodando = false;
-
-            timerPausado = false;
+            entrarModoTimer();
 
             longPressJaTratado = true;
 
@@ -417,4 +388,45 @@ void controlarBotaoEncoder() {
     }
 
     ultimoEstadoBotao = estadoBotao;
+}
+
+void cliqueEncoder() {
+
+    cliqueSimples();
+}
+
+void zerarVolumeTotal() {
+
+    volume_total = 0;
+
+    ligarBacklight();
+
+    marcarLcdSujo();
+}
+
+void ajustarSetpoint(int direcao) {
+
+    if (configVolumeAtivo) {
+        return;
+    }
+
+    if (
+        estadoSistema != STANDBY &&
+        estadoSistema != ENCHENDO &&
+        estadoSistema != PAUSADO
+    ) {
+        return;
+    }
+
+    float passo = obterPassoVolume(volume_limite);
+
+    volume_limite += direcao * passo;
+
+    if (volume_limite < 0) {
+        volume_limite = 0;
+    }
+
+    ligarBacklight();
+
+    marcarLcdSujo();
 }

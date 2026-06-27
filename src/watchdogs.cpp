@@ -5,6 +5,7 @@
 #include "system_state.h"
 #include "watchdogs.h"
 #include "valve_control.h"
+#include "lcd_display.h"
 
 unsigned long ultimoFluxoDetectado = 0;
 
@@ -26,6 +27,25 @@ void resetarWatchdogs() {
     erroSemFluxo = false;
 
     erroTimeout = false;
+}
+
+void sairErro() {
+
+    erroSemFluxo = false;
+
+    erroTimeout = false;
+
+    resetarWatchdogs();
+
+    releLigado = false;
+
+    fecharValvula();
+
+    estadoSistema = STANDBY;
+
+    ligarBacklight();
+
+    marcarLcdSujo();
 }
 
 void verificarWatchdogs() {
@@ -55,6 +75,10 @@ void verificarWatchdogs() {
 
         estadoSistema = ERRO;
 
+        ligarBacklight();
+
+        marcarLcdSujo();
+
         return;
     }
 
@@ -70,6 +94,10 @@ void verificarWatchdogs() {
         fecharValvula();
 
         estadoSistema = ERRO;
+
+        ligarBacklight();
+
+        marcarLcdSujo();
 
         return;
     }

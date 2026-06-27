@@ -9,7 +9,11 @@
 #include "storage.h"
 #include "wifi_control.h"
 #include "display_format.h"
+#include "encoder_control.h"
+#include "lcd_display.h"
+#include "timer_control.h"
 #include "web_index.h"
+#include "web_logo.h"
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -153,6 +157,21 @@ static void registrarRotas() {
             request->send_P(200, "text/html", INDEX_HTML);
         });
 
+    server.on("/logo.png", HTTP_GET,
+        [](AsyncWebServerRequest *request) {
+
+            AsyncWebServerResponse *response = request->beginResponse_P(
+                200,
+                "image/png",
+                LOGO_MAZZA_PNG,
+                LOGO_MAZZA_PNG_LEN
+            );
+
+            response->addHeader("Cache-Control", "no-cache");
+
+            request->send(response);
+        });
+
     server.on("/api/wifi/status", HTTP_GET,
         [](AsyncWebServerRequest *request) {
 
@@ -273,6 +292,176 @@ static void registrarRotas() {
             serializeJson(resposta, json, sizeof(json));
 
             request->send(200, "application/json", json);
+        });
+
+    server.on("/api/controle/clique", HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+
+            cliqueEncoder();
+
+            ligarBacklight();
+
+            request->send(200, "application/json", "{\"ok\":true}");
+        });
+
+    server.on("/api/controle/zerar-volume", HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+
+            zerarVolumeTotal();
+
+            ligarBacklight();
+
+            request->send(200, "application/json", "{\"ok\":true}");
+        });
+
+    server.on(
+        "/api/controle/setpoint",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) {
+
+            static String corpoSetpoint;
+
+            if (index == 0) {
+                corpoSetpoint = "";
+            }
+
+            for (size_t i = 0; i < len; i++) {
+                corpoSetpoint += (char)data[i];
+            }
+
+            if (index + len < total) {
+                return;
+            }
+
+            JsonDocument entrada;
+
+            JsonDocument resposta;
+
+            if (deserializeJson(entrada, corpoSetpoint)) {
+
+                resposta["ok"] = false;
+                resposta["error"] = "JSON invalido";
+            }
+            else {
+
+                int direcao = entrada["direcao"] | 0;
+
+                if (direcao == 0) {
+
+                    resposta["ok"] = false;
+                    resposta["error"] = "Direcao invalida";
+                }
+                else {
+
+                    ajustarSetpoint(direcao > 0 ? 1 : -1);
+
+                    ligarBacklight();
+
+                    resposta["ok"] = true;
+                }
+            }
+
+            char json[128];
+
+            serializeJson(resposta, json, sizeof(json));
+
+            request->send(200, "application/json", json);
+        });
+
+    server.on(
+        "/api/timer/ajustar",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) {
+
+            static String corpoTimer;
+
+            if (index == 0) {
+                corpoTimer = "";
+            }
+
+            for (size_t i = 0; i < len; i++) {
+                corpoTimer += (char)data[i];
+            }
+
+            if (index + len < total) {
+                return;
+            }
+
+            JsonDocument entrada;
+
+            JsonDocument resposta;
+
+            if (deserializeJson(entrada, corpoTimer)) {
+
+                resposta["ok"] = false;
+                resposta["error"] = "JSON invalido";
+            }
+            else {
+
+                int direcao = entrada["direcao"] | 0;
+
+                if (direcao == 0) {
+
+                    resposta["ok"] = false;
+                    resposta["error"] = "Direcao invalida";
+                }
+                else {
+
+                    ajustarTempoTimer(direcao > 0 ? 1 : -1);
+
+                    resposta["ok"] = true;
+                }
+            }
+
+            char json[128];
+
+            serializeJson(resposta, json, sizeof(json));
+
+            request->send(200, "application/json", json);
+        });
+
+    server.on("/api/timer/acao", HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+
+            JsonDocument resposta;
+
+            if (acaoTimerWeb()) {
+
+                resposta["ok"] = true;
+            }
+            else {
+
+                resposta["ok"] = false;
+                resposta["error"] = "Timer indisponivel";
+            }
+
+            char json[128];
+
+            serializeJson(resposta, json, sizeof(json));
+
+            request->send(200, "application/json", json);
+        });
+
+    server.on("/api/timer/cancelar", HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+
+            cancelarTimer();
+
+            request->send(200, "application/json", "{\"ok\":true}");
         });
 
     server.on("/api/config", HTTP_GET,
@@ -471,7 +660,6 @@ void atualizarWebSocket() {
     doc["fluxo"] = fluxo;
     doc["volume"] = volume_total;
     doc["setpoint"] = volume_limite;
-    doc["pwm"] = pwmRetencao;
     doc["estado"] = estado;
     doc["valvula"] = releLigado;
 
@@ -479,7 +667,12 @@ void atualizarWebSocket() {
 
     adicionarInfoWifi(doc);
 
-    char json[320];
+    doc["timer_modo"] = emModoTimer();
+    doc["timer_estado"] = obterTextoTimer();
+    doc["timer_restante"] = tempoRestanteTimer;
+    doc["timer_configurado"] = tempoTimer;
+
+    char json[400];
 
     serializeJson(doc, json, sizeof(json));
 

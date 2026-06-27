@@ -9,3 +9,9 @@ void iniciarEncoder();
 void atualizarEncoder();
 
 void controlarBotaoEncoder();
+
+void cliqueEncoder();
+
+void zerarVolumeTotal();
+
+void ajustarSetpoint(int direcao);

@@ -55,9 +55,31 @@ static void controlarBotaoManual() {
         return;
     }
 
-    if (digitalRead(PINO_BOTAO_MANUAL) == LOW) {
+    static bool manualPressionado = false;
+
+    bool manualAtivo = digitalRead(PINO_BOTAO_MANUAL) == LOW;
+
+    if (manualAtivo && !manualPressionado) {
 
         ligarBacklight();
+
+        if (estadoSistema == ERRO) {
+
+            sairErro();
+
+            manualPressionado = manualAtivo;
+
+            return;
+        }
+    }
+
+    manualPressionado = manualAtivo;
+
+    if (estadoSistema == ERRO) {
+        return;
+    }
+
+    if (manualAtivo) {
 
         if (limiteVolumeAtingido(volume_total, volume_limite)) {
 
