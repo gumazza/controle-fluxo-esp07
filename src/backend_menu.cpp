@@ -9,30 +9,24 @@
 #include "globals.h"
 #include "storage.h"
 #include "system_state.h"
-#include "encoder_control.h"
+#include "lcd_display.h"
 
 WiFiManager wm;
 
-// =========================
-// ENTRAR
-// =========================
-
 void entrarBackend() {
 
-    estadoSistema = BACKEND_MENU;
-
-    backendIndex = 0;
-
-    backendEditando = false;
+    configVolumeAtivo = false;
 
     backendConfirmando = false;
 
-    encoder.setEncoderValue(0);
-}
+    backendEditando = false;
 
-// =========================
-// SAIR
-// =========================
+    backendIndex = 0;
+
+    estadoSistema = BACKEND_MENU;
+
+    marcarLcdSujo();
+}
 
 void sairBackend() {
 
@@ -43,17 +37,11 @@ void sairBackend() {
     backendEditando = false;
 
     backendConfirmando = false;
+
+    marcarLcdSujo();
 }
 
-// =========================
-// CLICK
-// =========================
-
 void backendClick() {
-
-    // =========================
-    // RESET STATS
-    // =========================
 
     if (
         backendIndex == 1 &&
@@ -69,10 +57,6 @@ void backendClick() {
         backendConfirmando = false;
     }
 
-    // =========================
-    // RESET WIFI
-    // =========================
-
     else if (
         backendIndex == 2 &&
         backendConfirmando
@@ -83,10 +67,6 @@ void backendClick() {
         ESP.restart();
     }
 
-    // =========================
-    // REBOOT ESP
-    // =========================
-
     else if (
         backendIndex == 3 &&
         backendConfirmando
@@ -95,26 +75,15 @@ void backendClick() {
         ESP.restart();
     }
 
-    // =========================
-    // ENTRAR/SAIR EDIÇÃO
-    // =========================
-
     else {
 
-        backendEditando =
-            !backendEditando;
+        backendEditando = !backendEditando;
     }
+
+    marcarLcdSujo();
 }
 
-// =========================
-// LONG PRESS
-// =========================
-
 void backendLongPress() {
-
-    // =========================
-    // SAIR MENU
-    // =========================
 
     if (!backendEditando) {
 
@@ -123,18 +92,12 @@ void backendLongPress() {
         return;
     }
 
-    // =========================
-    // FINALIZA EDIÇÃO
-    // =========================
-
     backendEditando = false;
 
     salvarConfiguracoes();
-}
 
-// =========================
-// DUPLO CLICK
-// =========================
+    marcarLcdSujo();
+}
 
 void backendDoubleClick() {
 
@@ -144,108 +107,85 @@ void backendDoubleClick() {
         backendIndex == 3
     ) {
 
-        backendConfirmando =
-            !backendConfirmando;
+        backendConfirmando = !backendConfirmando;
     }
+
+    marcarLcdSujo();
 }
 
-// =========================
-// MENU
-// =========================
+void processarRotacaoBackend(int direcao) {
 
-void atualizarBackendMenu() {
-
-    if (
-        estadoSistema != BACKEND_MENU
-    ) {
-
+    if (estadoSistema != BACKEND_MENU) {
         return;
     }
-
-    int valor =
-        encoder.readEncoder();
-
-    if (valor == 0)
-        return;
-
-    // =========================
-    // NAVEGAÇÃO
-    // =========================
 
     if (!backendEditando) {
 
-        if (valor > 0)
+        if (direcao > 0) {
             backendIndex++;
-        else
+        }
+        else {
             backendIndex--;
+        }
 
-        if (backendIndex < 0)
+        if (backendIndex < 0) {
             backendIndex = 5;
+        }
 
-        if (backendIndex > 5)
+        if (backendIndex > 5) {
             backendIndex = 0;
-    }
+        }
 
-    // =========================
-    // EDIÇÃO
-    // =========================
+        backendConfirmando = false;
+    }
 
     else {
 
         switch (backendIndex) {
 
-            // =========================
-            // CALIBRAÇÃO
-            // =========================
-
             case 0:
 
-                fator_calibracao +=
-                    valor > 0 ? 0.1 : -0.1;
-                    
-                if (fator_calibracao < 1)
-                    fator_calibracao = 1;
+                fator_calibracao += direcao > 0 ? 0.1f : -0.1f;
 
-                if (fator_calibracao > 20)
+                if (fator_calibracao < 1) {
+                    fator_calibracao = 1;
+                }
+
+                if (fator_calibracao > 20) {
                     fator_calibracao = 20;
+                }
 
                 break;
-
-            // =========================
-            // WATCHDOG FLUXO
-            // =========================
 
             case 4:
 
-                timeoutSemFluxo +=
-                    valor > 0 ? 1000 : -1000;
+                timeoutSemFluxo += direcao > 0 ? 1000 : -1000;
 
-                if (timeoutSemFluxo < 1000)
+                if (timeoutSemFluxo < 1000) {
                     timeoutSemFluxo = 1000;
+                }
 
-                if (timeoutSemFluxo > 60000)
+                if (timeoutSemFluxo > 60000) {
                     timeoutSemFluxo = 60000;
+                }
 
                 break;
 
-            // =========================
-            // WATCHDOG ENCHIMENTO
-            // =========================
-
             case 5:
 
-                timeoutEnchimento +=
-                    valor > 0 ? 10000 : -10000;
+                timeoutEnchimento += direcao > 0 ? 10000 : -10000;
 
-                if (timeoutEnchimento < 60000)
+                if (timeoutEnchimento < 60000) {
                     timeoutEnchimento = 60000;
+                }
 
-                if (timeoutEnchimento > 7200000)
+                if (timeoutEnchimento > 7200000) {
                     timeoutEnchimento = 7200000;
+                }
 
                 break;
         }
     }
 
-    encoder.setEncoderValue(0);
+    marcarLcdSujo();
 }

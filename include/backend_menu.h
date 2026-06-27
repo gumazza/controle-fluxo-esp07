@@ -4,7 +4,7 @@ void entrarBackend();
 
 void sairBackend();
 
-void atualizarBackendMenu();
+void processarRotacaoBackend(int direcao);
 
 void backendClick();
 

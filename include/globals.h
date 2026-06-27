@@ -65,6 +65,10 @@ extern int backendIndex;
 extern bool backendEditando;
 extern bool backendConfirmando;
 
+extern bool configVolumeAtivo;
+// 0 = setpoint (linha 1), 1 = volume total (linha 2)
+extern uint8_t configVolumeSelecao;
+
 // =========================
 // PWM
 // =========================

@@ -4,13 +4,12 @@
 
 #include "config.h"
 #include "globals.h"
+#include "fill_logic.h"
 #include "lcd_display.h"
 #include "timer_control.h"
 #include "backend_menu.h"
-
-// =========================
-// ENCODER
-// =========================
+#include "valve_control.h"
+#include "watchdogs.h"
 
 AiEsp32RotaryEncoder encoder(
     ENCODER_PINO_A,
@@ -20,10 +19,6 @@ AiEsp32RotaryEncoder encoder(
     4
 );
 
-// =========================
-// CONTROLE BOTAO
-// =========================
-
 bool ultimoEstadoBotao = HIGH;
 
 unsigned long tempoPressionado = 0;
@@ -32,62 +27,65 @@ unsigned long ultimoClique = 0;
 
 bool aguardandoDuploClique = false;
 
-// =========================
-// FUNCOES
-// =========================
+static void sairConfigVolume() {
 
-float obterPassoVolume(float valor) {
+    configVolumeAtivo = false;
 
-    if (valor < 1.0)
-        return 0.010;
-
-    if (valor < 5.0)
-        return 0.100;
-
-    if (valor < 10.0)
-        return 0.500;
-
-    return 1.000;
+    marcarLcdSujo();
 }
 
-// =========================
-// INICIAR
-// =========================
+static void entrarConfigVolume() {
 
-void iniciarEncoder()
-{
-    pinMode(
-        ENCODER_PINO_A,
-        INPUT_PULLUP
-    );
+    configVolumeSelecao = 0;
 
-    pinMode(
-        ENCODER_PINO_B,
-        INPUT_PULLUP
-    );
+    configVolumeAtivo = true;
 
-    pinMode(
-        ENCODER_PINO_BTN,
-        INPUT
-    );
+    marcarLcdSujo();
 }
 
-// =========================
-// ROTACAO
-// =========================
+static void processarRotacaoConfigVolume(int direcao) {
 
-void atualizarEncoder()
-{
+    if (direcao > 0) {
+        configVolumeSelecao = 1;
+    }
+    else {
+        configVolumeSelecao = 0;
+    }
+}
+
+static void zerarVolumeSelecionado() {
+
+    if (configVolumeSelecao == 0) {
+        volume_limite = 0;
+    }
+    else {
+        volume_total = 0;
+    }
+}
+
+void iniciarEncoder() {
+
+    pinMode(ENCODER_PINO_A, INPUT_PULLUP);
+
+    pinMode(ENCODER_PINO_B, INPUT_PULLUP);
+
+    pinMode(ENCODER_PINO_BTN, INPUT);
+}
+
+void atualizarEncoder() {
+
     static int ultimoCLK = HIGH;
+
     static unsigned long ultimoPulso = 0;
 
     int clk = digitalRead(ENCODER_PINO_A);
 
-    if (ultimoCLK == HIGH && clk == LOW)
-    {
-        if (millis() - ultimoPulso < 5)
-        {
+    if (ultimoCLK == HIGH && clk == LOW) {
+
+        if (millis() - ultimoPulso < DEBOUNCE_ENCODER_MS) {
+
             ultimoCLK = clk;
+
             return;
         }
 
@@ -97,57 +95,65 @@ void atualizarEncoder()
 
         int direcao;
 
-        if (digitalRead(ENCODER_PINO_B) != clk)
+        if (digitalRead(ENCODER_PINO_B) != clk) {
             direcao = 1;
-        else
+        }
+        else {
             direcao = -1;
-
-        // =====================
-        // TIMER
-        // =====================
+        }
 
         if (
             estadoSistema == TIMER_OFF ||
             estadoSistema == TIMER_ON ||
             estadoSistema == TIMER_PAUSA
-        )
-        {
+        ) {
             incrementarTimer(direcao);
 
             ultimoCLK = clk;
+
             return;
         }
 
-        // =====================
-        // BACKEND
-        // =====================
+        if (estadoSistema == BACKEND_MENU) {
 
-        if (estadoSistema == BACKEND_MENU)
-        {
+            processarRotacaoBackend(direcao);
+
             ultimoCLK = clk;
+
             return;
         }
 
-        // =====================
-        // VOLUME
-        // =====================
+        if (configVolumeAtivo) {
 
-        float passo =
-            obterPassoVolume(volume_limite);
+            processarRotacaoConfigVolume(direcao);
 
-        volume_limite +=
-            direcao * passo;
+            ultimoCLK = clk;
 
-        if (volume_limite < 0)
+            return;
+        }
+
+        if (
+            estadoSistema != STANDBY &&
+            estadoSistema != ENCHENDO &&
+            estadoSistema != PAUSADO
+        ) {
+
+            ultimoCLK = clk;
+
+            return;
+        }
+
+        float passo = obterPassoVolume(volume_limite);
+
+        volume_limite += direcao * passo;
+
+        if (volume_limite < 0) {
             volume_limite = 0;
+        }
     }
 
     ultimoCLK = clk;
 }
-
-// =========================
-// CLIQUE SIMPLES
-// =========================
 
 void cliqueSimples() {
 
@@ -155,75 +161,76 @@ void cliqueSimples() {
 
     ligarBacklight();
 
+    if (configVolumeAtivo) {
+
+        zerarVolumeSelecionado();
+
+        sairConfigVolume();
+
+        return;
+    }
+
     if (estadoSistema == BACKEND_MENU) {
 
-    backendClick();
+        backendClick();
 
-    return;
-}
+        return;
+    }
 
     if (estadoSistema == TIMER_OFF) {
 
-    if (tempoTimer > 0) {
+        if (tempoTimer > 0) {
+
+            estadoSistema = TIMER_ON;
+
+            tempoRestanteTimer = tempoTimer;
+
+            timerRodando = true;
+        }
+
+        return;
+    }
+
+    if (estadoSistema == TIMER_ON) {
+
+        estadoSistema = TIMER_PAUSA;
+
+        timerPausado = true;
+
+        return;
+    }
+
+    if (estadoSistema == TIMER_PAUSA) {
 
         estadoSistema = TIMER_ON;
 
-        tempoRestanteTimer = tempoTimer;
+        timerPausado = false;
 
-        timerRodando = true;
+        return;
     }
-
-    return;
-}
-
-if (estadoSistema == TIMER_ON) {
-
-    estadoSistema = TIMER_PAUSA;
-
-    timerPausado = true;
-
-    return;
-}
-
-if (estadoSistema == TIMER_PAUSA) {
-
-    estadoSistema = TIMER_ON;
-
-    timerPausado = false;
-
-    return;
-}
 
     if (estadoSistema == ERRO) {
 
-    erroSemFluxo = false;
+        erroSemFluxo = false;
 
-    erroTimeout = false;
+        erroTimeout = false;
 
-    estadoSistema = STANDBY;
+        resetarWatchdogs();
 
-    return;
-}
+        fecharValvula();
+
+        estadoSistema = STANDBY;
+
+        return;
+    }
 
     switch (estadoSistema) {
 
-        // =========================
-        // INICIAR ENCHIMENTO
-        // =========================
-
         case STANDBY:
 
-            releLigado = true;
-
-            modoAutomatico = true;
-
-            estadoSistema = ENCHENDO;
+            iniciarEnchimento();
 
             break;
-
-        // =========================
-        // PAUSAR
-        // =========================
 
         case ENCHENDO:
 
@@ -232,10 +239,6 @@ if (estadoSistema == TIMER_PAUSA) {
             estadoSistema = PAUSADO;
 
             break;
-
-        // =========================
-        // RETOMAR
-        // =========================
 
         case PAUSADO:
 
@@ -253,10 +256,6 @@ if (estadoSistema == TIMER_PAUSA) {
     }
 }
 
-// =========================
-// DUPLO CLIQUE
-// =========================
-
 void duploClique() {
 
     Serial.println("DUPLO");
@@ -265,51 +264,59 @@ void duploClique() {
 
     if (estadoSistema == BACKEND_MENU) {
 
-    backendDoubleClick();
-
-    return;
-}
-
-    // =========================
-    // RESET SETPOINT
-    // =========================
-
-    if (volume_limite > 0) {
-
-        volume_limite = 0;
+        backendDoubleClick();
 
         return;
     }
 
-    // =========================
-    // RESET TOTAL
-    // =========================
+    if (configVolumeAtivo) {
 
-    volume_total = 0;
+        sairConfigVolume();
+
+        return;
+    }
+
+    if (
+        estadoSistema == STANDBY ||
+        estadoSistema == ENCHENDO ||
+        estadoSistema == PAUSADO
+    ) {
+
+        entrarConfigVolume();
+
+        return;
+    }
 }
-
-// =========================
-// LONG PRESS
-// =========================
 
 void longPress() {
 
     Serial.println("LONG");
-    
+
     ligarBacklight();
+
+    if (configVolumeAtivo) {
+        return;
+    }
 
     if (estadoSistema == BACKEND_MENU) {
 
-    backendLongPress();
+        backendLongPress();
 
-    return;
-}
-
-    // =========================
-    // SAIR TIMER
-    // =========================
+        return;
+    }
 
     if (
+        estadoSistema == STANDBY ||
+        estadoSistema == ERRO
+    ) {
+
+        entrarBackend();
+
+        return;
+    }
+
+    if (
+        estadoSistema == TIMER_OFF ||
         estadoSistema == TIMER_ON ||
         estadoSistema == TIMER_PAUSA
     ) {
@@ -320,105 +327,79 @@ void longPress() {
 
         estadoSistema = STANDBY;
 
+        marcarLcdSujo();
+
         return;
     }
-
-    // =========================
-    // ENTRAR TIMER
-    // =========================
-
-    estadoSistema = TIMER_OFF;
 }
 
-// =========================
-// BOTAO
-// =========================
+void controlarBotaoEncoder() {
 
-void controlarBotaoEncoder()
-{
-    bool estadoBotao =
-        digitalRead(ENCODER_PINO_BTN);
+    bool estadoBotao = digitalRead(ENCODER_PINO_BTN);
 
-    static unsigned long backendPress = 0;
+    static unsigned long timerComboPress = 0;
 
-    // =========================
-    // ENTRAR BACKEND
-    // =========================
+    static bool longPressJaTratado = false;
 
     if (
         digitalRead(PINO_BOTAO_MANUAL) == LOW &&
-        estadoBotao == LOW
-    )
-    {
-        if (backendPress == 0)
-            backendPress = millis();
+        estadoBotao == LOW &&
+        estadoSistema == STANDBY
+    ) {
+        if (timerComboPress == 0) {
+            timerComboPress = millis();
+        }
 
-        if (
-            millis() - backendPress >= 5000
-        )
-        {
-            entrarBackend();
+        if (millis() - timerComboPress >= TEMPO_LONG_PRESS) {
 
-            backendPress = 0;
+            estadoSistema = TIMER_OFF;
+
+            timerRodando = false;
+
+            timerPausado = false;
+
+            longPressJaTratado = true;
+
+            timerComboPress = 0;
         }
     }
-    else
-    {
-        backendPress = 0;
+    else {
+        timerComboPress = 0;
     }
-
-    // =========================
-    // BOTAO PRESSIONADO
-    // =========================
 
     if (
         ultimoEstadoBotao == HIGH &&
         estadoBotao == LOW
-    )
-    {
+    ) {
         tempoPressionado = millis();
-    }
 
-    // =========================
-    // BOTAO SOLTO
-    // =========================
+        longPressJaTratado = false;
+    }
 
     if (
         ultimoEstadoBotao == LOW &&
         estadoBotao == HIGH
-    )
-    {
+    ) {
         unsigned long tempoClique =
             millis() - tempoPressionado;
 
-        // =====================
-        // LONG PRESS
-        // =====================
-
         if (
-            tempoClique >= TEMPO_LONG_PRESS
-        )
-        {
+            tempoClique >= TEMPO_LONG_PRESS &&
+            !longPressJaTratado
+        ) {
             longPress();
         }
-        else
-        {
-            // =================
-            // DUPLO CLIQUE
-            // =================
+        else if (tempoClique < TEMPO_LONG_PRESS) {
 
             if (
                 aguardandoDuploClique &&
-                millis() - ultimoClique <=
-                TEMPO_DUPLO_CLIQUE
-            )
-            {
+                millis() - ultimoClique <= TEMPO_DUPLO_CLIQUE
+            ) {
                 duploClique();
 
                 aguardandoDuploClique = false;
             }
-            else
-            {
+            else {
                 aguardandoDuploClique = true;
 
                 ultimoClique = millis();
@@ -426,16 +407,10 @@ void controlarBotaoEncoder()
         }
     }
 
-    // =========================
-    // CLIQUE SIMPLES
-    // =========================
-
     if (
         aguardandoDuploClique &&
-        millis() - ultimoClique >
-        TEMPO_DUPLO_CLIQUE
-    )
-    {
+        millis() - ultimoClique > TEMPO_DUPLO_CLIQUE
+    ) {
         cliqueSimples();
 
         aguardandoDuploClique = false;

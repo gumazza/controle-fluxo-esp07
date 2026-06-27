@@ -3,77 +3,71 @@
 #include "config.h"
 #include "globals.h"
 #include "system_state.h"
-
-// =========================
-// TEMPOS
-// =========================
+#include "watchdogs.h"
+#include "valve_control.h"
 
 unsigned long ultimoFluxoDetectado = 0;
 
 unsigned long inicioEnchimento = 0;
 
-// =========================
-// WATCHDOGS
-// =========================
+void marcarInicioEnchimento() {
+
+    inicioEnchimento = millis();
+
+    ultimoFluxoDetectado = millis();
+}
+
+void resetarWatchdogs() {
+
+    ultimoFluxoDetectado = millis();
+
+    inicioEnchimento = millis();
+
+    erroSemFluxo = false;
+
+    erroTimeout = false;
+}
 
 void verificarWatchdogs() {
 
-    // =========================
-    // RESETA WATCHDOGS
-    // =========================
-
     if (!releLigado) {
 
-        ultimoFluxoDetectado = millis();
-
-        inicioEnchimento = millis();
-
-        erroSemFluxo = false;
-
-        erroTimeout = false;
+        resetarWatchdogs();
 
         return;
     }
 
-    // =========================
-    // DETECTOU FLUXO
-    // =========================
-
-    if (fluxo > 0.05) {
+    if (fluxo > FLUXO_MINIMO_LMIN) {
 
         ultimoFluxoDetectado = millis();
     }
 
-    // =========================
-    // SEM FLUXO
-    // =========================
-
     if (
         millis() - ultimoFluxoDetectado
-            >= TEMPO_SEM_FLUXO
+            >= timeoutSemFluxo
     ) {
 
         erroSemFluxo = true;
 
         releLigado = false;
 
+        fecharValvula();
+
         estadoSistema = ERRO;
 
         return;
     }
 
-    // =========================
-    // TIMEOUT ENCHIMENTO
-    // =========================
-
     if (
         millis() - inicioEnchimento
-            >= TEMPO_MAX_ENCHIMENTO
+            >= timeoutEnchimento
     ) {
 
         erroTimeout = true;
 
         releLigado = false;
+
+        fecharValvula();
 
         estadoSistema = ERRO;
 

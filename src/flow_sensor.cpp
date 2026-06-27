@@ -2,32 +2,17 @@
 
 #include "config.h"
 #include "globals.h"
+#include "fill_logic.h"
 #include "valve_control.h"
-
-// =========================
-// PULSOS
-// =========================
 
 volatile unsigned long contadorPulsos = 0;
 
-// =========================
-// TEMPO
-// =========================
-
 unsigned long ultimoCalculoFluxo = 0;
-
-// =========================
-// INTERRUP
-// =========================
 
 IRAM_ATTR void contadorPulso() {
 
     contadorPulsos++;
 }
-
-// =========================
-// INICIAR
-// =========================
 
 void iniciarSensorFluxo() {
 
@@ -40,17 +25,12 @@ void iniciarSensorFluxo() {
     );
 }
 
-// =========================
-// CALCULO
-// =========================
-
 void atualizarFluxo() {
 
     if (
         millis() - ultimoCalculoFluxo
             < INTERVALO_FLUXO
     ) {
-
         return;
     }
 
@@ -60,63 +40,32 @@ void atualizarFluxo() {
 
     contadorPulsos = 0;
 
-    #ifdef USAR_MOSFET
+#ifdef USAR_MOSFET
 
-        if (pulsos > 0)
-        {
-            registrarFluxoDetectado();
-        }
+    if (pulsos > 0) {
+        registrarFluxoDetectado();
+    }
 
 #endif
 
     interrupts();
 
-    // =========================
-    // YF-S201
-    //
-    // Frequencia:
-    //
-    // F = 7.5 * Q
-    //
-    // Q = L/min
-    // =========================
+    // YF-S201: F(Hz) = 7.5 * Q(L/min) => Q = pulsos/s / fator_calibracao
+    fluxo = calcularFluxoLMin(pulsos, fator_calibracao);
 
-    float segundos = INTERVALO_FLUXO / 1000.0;
-
-    //float frequencia = pulsos / segundos;
-
-    fluxo = ((float)pulsos / fator_calibracao);
-
-    // =========================
-    // L/min -> L/s
-    // =========================
-
-    //float litrosSegundo = fluxo / 60.0;
-
-    // =========================
-    // VOLUME
-    // =========================
-
-    volume = pulsos / fator_calibracao;
-
-    // =========================
-    // SOMA TOTAL
-    // =========================
+    volume = calcularVolumeLitros(pulsos, fator_calibracao);
 
     if (releLigado) {
-
         volume_total += volume;
     }
 
-    // =========================
-    // LIMITES
-    // =========================
-
-    if (volume_total < 0)
+    if (volume_total < 0) {
         volume_total = 0;
+    }
 
-    if (fluxo < 0)
+    if (fluxo < 0) {
         fluxo = 0;
+    }
 
     ultimoCalculoFluxo = millis();
 }

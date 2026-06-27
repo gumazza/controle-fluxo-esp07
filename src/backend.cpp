@@ -1,5 +1,7 @@
 #include <Arduino.h>
+
 #include <WiFiManager.h>
+
 #include "config.h"
 
 void verificarModoBackend() {
@@ -18,7 +20,9 @@ void verificarModoBackend() {
 
             WiFiManager wm;
 
-            wm.startConfigPortal("controle_fluxo");
+            wm.setConfigPortalTimeout(180);
+
+            wm.startConfigPortal(WIFI_AP_SSID);
         }
     }
 }

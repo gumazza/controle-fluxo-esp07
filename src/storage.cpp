@@ -7,11 +7,11 @@
 #include "config.h"
 #include "globals.h"
 
-// =========================
-// ESTRUTURA
-// =========================
-
 struct Configuracoes {
+
+    uint32_t magic;
+
+    uint8_t version;
 
     float volumeLimite;
 
@@ -24,111 +24,128 @@ struct Configuracoes {
     float litrosAcumulados;
 
     uint16_t pwm_retencao;
+
+    unsigned long timeoutSemFluxo;
+
+    unsigned long timeoutEnchimento;
 };
 
-Configuracoes config;
+static Configuracoes config;
 
+static void aplicarDefaults() {
 
-// =========================
-// INICIAR
-// =========================
+    config.magic = EEPROM_MAGIC;
+
+    config.version = EEPROM_VERSION;
+
+    config.volumeLimite = 0;
+
+    config.fatorCalibracao = FATOR_CALIB_DEFAULT;
+
+    config.timer = 0;
+
+    config.totalCiclos = 0;
+
+    config.litrosAcumulados = 0;
+
+    config.pwm_retencao = PWM_RETENCAO;
+
+    config.timeoutSemFluxo = TEMPO_SEM_FLUXO;
+
+    config.timeoutEnchimento = TEMPO_MAX_ENCHIMENTO;
+}
+
+static void restaurarGlobals() {
+
+    volume_limite = config.volumeLimite;
+
+    fator_calibracao = config.fatorCalibracao;
+
+    tempoTimer = config.timer;
+
+    totalCiclos = config.totalCiclos;
+
+    litrosAcumulados = config.litrosAcumulados;
+
+    pwmRetencao = config.pwm_retencao;
+
+    timeoutSemFluxo = config.timeoutSemFluxo;
+
+    timeoutEnchimento = config.timeoutEnchimento;
+}
+
+static bool validarConfig(const Configuracoes& cfg) {
+
+    if (
+        isnan(cfg.volumeLimite) ||
+        cfg.volumeLimite < 0 ||
+        cfg.volumeLimite > 999
+    ) {
+        return false;
+    }
+
+    if (
+        isnan(cfg.fatorCalibracao) ||
+        cfg.fatorCalibracao < 1 ||
+        cfg.fatorCalibracao > 20
+    ) {
+        return false;
+    }
+
+    if (cfg.timer > 86400) {
+        return false;
+    }
+
+    if (
+        cfg.pwm_retencao < 200 ||
+        cfg.pwm_retencao > 800
+    ) {
+        return false;
+    }
+
+    if (
+        cfg.timeoutSemFluxo < 1000 ||
+        cfg.timeoutSemFluxo > 60000
+    ) {
+        return false;
+    }
+
+    if (
+        cfg.timeoutEnchimento < 60000 ||
+        cfg.timeoutEnchimento > 7200000
+    ) {
+        return false;
+    }
+
+    return true;
+}
 
 void iniciarEEPROM() {
 
     EEPROM.begin(EEPROM_SIZE);
 }
 
-// =========================
-// CARREGAR
-// =========================
-
-void carregarConfiguracoes() {
-
-    EEPROM.get(0, config);
-
-    // =========================
-    // VALIDACOES
-    // =========================
-
-    if (
-        isnan(config.volumeLimite) ||
-        config.volumeLimite < 0 ||
-        config.volumeLimite > 999
-    ) {
-
-        config.volumeLimite = 0;
-    }
-
-    if (
-        isnan(config.fatorCalibracao) ||
-        config.fatorCalibracao < 1 ||
-        config.fatorCalibracao > 20
-    ) {
-
-        config.fatorCalibracao = 7.5;
-    }
-
-    if (
-        config.timer > 86400
-    ) {
-
-        config.timer = 0;
-    }
-    
-    if (
-        config.pwm_retencao < 200 ||
-        config.pwm_retencao > 800
-    ){
-        config.pwm_retencao = 350;
-    }
-
-    // =========================
-    // RESTAURA
-    // =========================
-
-    volume_limite =
-        config.volumeLimite;
-
-    fator_calibracao =
-        config.fatorCalibracao;
-
-    tempoTimer =
-        config.timer;
-
-    totalCiclos =
-        config.totalCiclos;
-
-    litrosAcumulados =
-        config.litrosAcumulados;
-        
-    pwmRetencao =
-        config.pwm_retencao;    
-}
-
-// =========================
-// SALVAR
-// =========================
-
 void salvarConfiguracoes() {
 
-    config.volumeLimite =
-        volume_limite;
+    config.magic = EEPROM_MAGIC;
 
-    config.fatorCalibracao =
-        fator_calibracao;
+    config.version = EEPROM_VERSION;
 
-    config.timer =
-        tempoTimer;
+    config.volumeLimite = volume_limite;
 
-    config.totalCiclos =
-        totalCiclos;
+    config.fatorCalibracao = fator_calibracao;
 
-    config.litrosAcumulados =
-        litrosAcumulados;
+    config.timer = tempoTimer;
 
-    config.pwm_retencao =
-        pwmRetencao;
+    config.totalCiclos = totalCiclos;
 
+    config.litrosAcumulados = litrosAcumulados;
+
+    config.pwm_retencao = pwmRetencao;
+
+    config.timeoutSemFluxo = timeoutSemFluxo;
+
+    config.timeoutEnchimento = timeoutEnchimento;
 
     EEPROM.put(0, config);
 
@@ -137,68 +154,96 @@ void salvarConfiguracoes() {
     ultimoSaveEEPROM = millis();
 }
 
-// =========================
-// AUTO SAVE
-// =========================
+void carregarConfiguracoes() {
+
+    EEPROM.get(0, config);
+
+    if (
+        config.magic != EEPROM_MAGIC ||
+        config.version != EEPROM_VERSION ||
+        !validarConfig(config)
+    ) {
+
+        aplicarDefaults();
+
+        restaurarGlobals();
+
+        salvarConfiguracoes();
+    }
+    else {
+        restaurarGlobals();
+    }
+}
 
 void verificarSalvarConfiguracoes() {
 
     static float ultimoVolumeLimite = -1;
 
+    static float ultimoFator = -1;
+
     static unsigned long ultimoTimerSalvo = 0;
 
-    // =========================
-    // EVITA LOOP EEPROM
-    // =========================
+    static uint16_t ultimoPwm = 0;
+
+    static unsigned long ultimoTimeoutFluxo = 0;
+
+    static unsigned long ultimoTimeoutEnchimento = 0;
 
     if (
         millis() - ultimoSaveEEPROM
-            < 3000
+            < DEBOUNCE_EEPROM_MS
     ) {
-
         return;
     }
 
     bool salvar = false;
 
-    // =========================
-    // SETPOINT
-    // =========================
-
     if (
-        abs(
-            volume_limite -
-            ultimoVolumeLimite
-        ) > 0.001
+        abs(volume_limite - ultimoVolumeLimite)
+            > 0.001
     ) {
 
-        ultimoVolumeLimite =
-            volume_limite;
+        ultimoVolumeLimite = volume_limite;
 
         salvar = true;
     }
 
-    // =========================
-    // TIMER
-    // =========================
+    if (abs(fator_calibracao - ultimoFator) > 0.001) {
 
-    if (
-        tempoTimer !=
-        ultimoTimerSalvo
-    ) {
-
-        ultimoTimerSalvo =
-            tempoTimer;
+        ultimoFator = fator_calibracao;
 
         salvar = true;
     }
 
-    // =========================
-    // SALVAR
-    // =========================
+    if (tempoTimer != ultimoTimerSalvo) {
+
+        ultimoTimerSalvo = tempoTimer;
+
+        salvar = true;
+    }
+
+    if (pwmRetencao != ultimoPwm) {
+
+        ultimoPwm = pwmRetencao;
+
+        salvar = true;
+    }
+
+    if (timeoutSemFluxo != ultimoTimeoutFluxo) {
+
+        ultimoTimeoutFluxo = timeoutSemFluxo;
+
+        salvar = true;
+    }
+
+    if (timeoutEnchimento != ultimoTimeoutEnchimento) {
+
+        ultimoTimeoutEnchimento = timeoutEnchimento;
+
+        salvar = true;
+    }
 
     if (salvar) {
-
         salvarConfiguracoes();
     }
 }

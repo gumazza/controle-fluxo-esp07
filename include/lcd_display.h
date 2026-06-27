@@ -12,4 +12,6 @@ void ligarBacklight();
 
 void desligarBacklight();
 
+void marcarLcdSujo();
+
 void telaPrincipal();
