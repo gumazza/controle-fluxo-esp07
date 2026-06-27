@@ -1,8 +1,7 @@
 #include <Arduino.h>
 
-#include <WiFiManager.h>
-
 #include "config.h"
+#include "wifi_control.h"
 
 void verificarModoBackend() {
 
@@ -18,11 +17,7 @@ void verificarModoBackend() {
             digitalRead(PINO_BOTAO_MANUAL) == LOW
         ) {
 
-            WiFiManager wm;
-
-            wm.setConfigPortalTimeout(180);
-
-            wm.startConfigPortal(WIFI_AP_SSID);
+            iniciarPortalConfiguracao();
         }
     }
 }

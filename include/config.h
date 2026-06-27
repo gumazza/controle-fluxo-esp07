@@ -65,6 +65,7 @@
 // =========================
 
 #define WIFI_AP_SSID           "controle_volume"
+#define WIFI_AP_IP             192, 168, 4, 1
 #define WIFI_CONNECT_TIMEOUT   30UL
 #define WIFI_PORTAL_TIMEOUT    180UL
 

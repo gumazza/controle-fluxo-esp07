@@ -99,7 +99,9 @@ Diagrama completo em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | ERRO SEM FLUXO | Válvula aberta sem líquido por > timeout configurado |
 | TIMEOUT | Enchimento excedeu tempo máximo |
 | Não inicia enchimento | Setpoint = 0 L |
-| WiFi não conecta | Controlador funciona normalmente; web/OTA só após conectar. Portal manual: botão manual + encoder no boot, ou RESET WIFI no backend (AP: `controle_volume`) |
+| WiFi | Rede **`controle_volume`** sempre visível (sem senha). IP: **192.168.4.1** |
+| Sem WiFi configurado | Portal WiFiManager abre automaticamente ao conectar no AP |
+| Reconfigurar | Backend → RESET WIFI, ou botão manual + encoder 3 s no boot |
 
 ---
 

@@ -10,7 +10,13 @@
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
+static bool webServerIniciado = false;
+
 void iniciarWebServer() {
+
+    if (webServerIniciado) {
+        return;
+    }
 
     server.on("/", HTTP_GET,
         [](AsyncWebServerRequest *request) {
@@ -34,11 +40,24 @@ void iniciarWebServer() {
     server.addHandler(&ws);
 
     server.begin();
+
+    webServerIniciado = true;
+}
+
+void pararWebServer() {
+
+    if (!webServerIniciado) {
+        return;
+    }
+
+    server.end();
+
+    webServerIniciado = false;
 }
 
 void atualizarWebSocket() {
 
-    if (!wifiConectado()) {
+    if (!redeAtiva()) {
         return;
     }
 

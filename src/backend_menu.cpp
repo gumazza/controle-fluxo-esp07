@@ -1,17 +1,12 @@
 #include <Arduino.h>
 
-#include <ESP8266WiFi.h>
-
 #include <ESP.h>
-
-#include <WiFiManager.h>
 
 #include "globals.h"
 #include "storage.h"
 #include "system_state.h"
 #include "lcd_display.h"
-
-WiFiManager wm;
+#include "wifi_control.h"
 
 void entrarBackend() {
 
@@ -62,7 +57,7 @@ void backendClick() {
         backendConfirmando
     ) {
 
-        wm.resetSettings();
+        resetarWifi();
 
         ESP.restart();
     }
