@@ -38,10 +38,12 @@ void atualizarWebSocket() {
     doc["fluxo"] = fluxo;
     doc["volume"] = volume_total;
     doc["setpoint"] = volume_limite;
+    doc["pwm"] = pwmRetencao;
 
     String json;
 
     serializeJson(doc, json);
 
     ws.textAll(json);
+
 }

@@ -37,7 +37,7 @@
 // BOTOES
 // =========================
 
-#define TEMPO_LONG_PRESS       3000UL
+#define TEMPO_LONG_PRESS       2000UL
 #define TEMPO_DUPLO_CLIQUE     400UL
 
 // =========================
@@ -65,3 +65,12 @@
 // =========================
 
 #define WIFI_AP_SSID           "controle_fluxo"
+
+// =========================
+// PWM
+// =========================
+
+#define PWM_PICO      1023
+#define PWM_RETENCAO  450
+
+#define TEMPO_PICO_MS 250

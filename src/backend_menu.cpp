@@ -202,7 +202,7 @@ void atualizarBackendMenu() {
 
                 fator_calibracao +=
                     valor > 0 ? 0.1 : -0.1;
-
+                    
                 if (fator_calibracao < 1)
                     fator_calibracao = 1;
 

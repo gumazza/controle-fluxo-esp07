@@ -99,41 +99,30 @@ void telaPrincipal() {
 
     String vazao = formatarFluxo(fluxo);
 
-    // =========================
-    // LINHA 1
-    // =========================
+    char linha1[17];
+    char linha2[17];
 
-    lcd.setCursor(0, 0);
+    snprintf(
+        linha1,
+        sizeof(linha1),
+        "%-5sL     L/min",
+        limite.c_str()
+    );
 
-    lcd.print("                ");
+    snprintf(
+        linha2,
+        sizeof(linha2),
+        "%-5sL     %s",
+        total.c_str(),
+        vazao.c_str()
+    );
 
-    lcd.setCursor(0, 0);
+    lcd.setCursor(0,0);
+    lcd.print(linha1);
 
-    lcd.print(limite);
+    lcd.setCursor(0,1);
+    lcd.print(linha2);
 
-    lcd.print("L");
-
-    lcd.setCursor(11, 0);
-
-    lcd.print("L/seg");
-
-    // =========================
-    // LINHA 2
-    // =========================
-
-    lcd.setCursor(0, 1);
-
-    lcd.print("                ");
-
-    lcd.setCursor(0, 1);
-
-    lcd.print(total);
-
-    lcd.print("L");
-
-    lcd.setCursor(11, 1);
-
-    lcd.print(vazao);
 }
 
 // =========================
@@ -276,20 +265,20 @@ void atualizarLCD() {
 
             if (erroSemFluxo) {
 
-            lcd.print("ERRO SEM FLUX");
+            lcd.print(" ERRO SEM FLUX  ");
             }
             else if (erroTimeout) {
 
-            lcd.print("TIMEOUT");
+            lcd.print("     TIMEOUT    ");
             }
             else {
 
-            lcd.print("ERRO SISTEMA");
+            lcd.print("  ERRO SISTEMA  ");
              }
 
             lcd.setCursor(0, 1);
 
-            lcd.print("Pressione BTN");
+            lcd.print("Pressione BTN   ");
 
             break;
 

@@ -22,9 +22,12 @@ struct Configuracoes {
     unsigned long totalCiclos;
 
     float litrosAcumulados;
+
+    uint16_t pwm_retencao;
 };
 
 Configuracoes config;
+
 
 // =========================
 // INICIAR
@@ -71,6 +74,13 @@ void carregarConfiguracoes() {
 
         config.timer = 0;
     }
+    
+    if (
+        config.pwm_retencao < 200 ||
+        config.pwm_retencao > 800
+    ){
+        config.pwm_retencao = 350;
+    }
 
     // =========================
     // RESTAURA
@@ -90,6 +100,9 @@ void carregarConfiguracoes() {
 
     litrosAcumulados =
         config.litrosAcumulados;
+        
+    pwmRetencao =
+        config.pwm_retencao;    
 }
 
 // =========================
@@ -112,6 +125,10 @@ void salvarConfiguracoes() {
 
     config.litrosAcumulados =
         litrosAcumulados;
+
+    config.pwm_retencao =
+        pwmRetencao;
+
 
     EEPROM.put(0, config);
 

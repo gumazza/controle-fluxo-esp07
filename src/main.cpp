@@ -13,7 +13,7 @@
 #include "lcd_display.h"
 #include "flow_sensor.h"
 #include "encoder_control.h"
-#include "relay_control.h"
+#include "valve_control.h"
 #include "timer_control.h"
 #include "watchdogs.h"
 #include "backend.h"
@@ -56,17 +56,25 @@ unsigned long timeoutEnchimento = TEMPO_MAX_ENCHIMENTO;
 
 float litrosAcumulados = 0;
 
+uint16_t pwmRetencao = 350;
+
 EstadoSistema estadoSistema = STANDBY;
 
 // =========================
 // SETUP
 // =========================
 
-void setup() {
-
+void setup()
+{
     Serial.begin(115200);
 
+    // =========================
+    // LCD
+    // =========================
+
     Wire.begin(LCD_SDA, LCD_SCL);
+
+    iniciarLCD();
 
     // =========================
     // EEPROM
@@ -75,6 +83,16 @@ void setup() {
     iniciarEEPROM();
 
     carregarConfiguracoes();
+
+    // =========================
+    // HARDWARE
+    // =========================
+
+    iniciarSensorFluxo();
+
+    iniciarEncoder();
+
+    iniciarValvula();
 
     // =========================
     // BACKEND
@@ -90,23 +108,22 @@ void setup() {
 
     WiFiManager wm;
 
+    wm.setDebugOutput(false);
+
     wm.autoConnect("controle_fluxo");
 
     // =========================
-    // MODULOS
+    // WEB
     // =========================
 
-        iniciarLCD();
+    iniciarWebServer();
 
-        iniciarSensorFluxo();
+    // =========================
+    // OTA
+    // =========================
 
-        iniciarEncoder();
+    iniciarOTA();
 
-        iniciarRele();
-
-        iniciarWebServer();
-
-        iniciarOTA();
 }
 
 // =========================
@@ -123,11 +140,13 @@ void loop() {
 
     atualizarTimer();
 
-    atualizarRele();
+    //atualizarRele();
 
     verificarWatchdogs();
 
     atualizarLCD();
+
+    atualizarValvula();
 
     atualizarWebSocket();
 

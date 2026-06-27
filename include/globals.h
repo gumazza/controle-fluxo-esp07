@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include "system_state.h"
 
 // =========================
@@ -11,6 +12,7 @@ extern float volume;
 extern float volume_total;
 extern float volume_limite;
 extern float fator_calibracao;
+extern unsigned long ultimoFluxoDetectado;
 
 // =========================
 // ESTADOS
@@ -63,3 +65,8 @@ extern int backendIndex;
 extern bool backendEditando;
 extern bool backendConfirmando;
 
+// =========================
+// PWM
+// =========================
+
+extern uint16_t pwmRetencao;

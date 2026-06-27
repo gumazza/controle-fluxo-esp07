@@ -54,70 +54,95 @@ float obterPassoVolume(float valor) {
 // INICIAR
 // =========================
 
-void iniciarEncoder() {
-
-    encoder.begin();
-
-    encoder.setup(
-        [] { encoder.readEncoder_ISR(); }
+void iniciarEncoder()
+{
+    pinMode(
+        ENCODER_PINO_A,
+        INPUT_PULLUP
     );
 
-    encoder.setBoundaries(
-        -100000,
-        100000,
-        false
+    pinMode(
+        ENCODER_PINO_B,
+        INPUT_PULLUP
     );
 
-    encoder.setAcceleration(200);
+    pinMode(
+        ENCODER_PINO_BTN,
+        INPUT
+    );
 }
 
 // =========================
 // ROTACAO
 // =========================
 
-void atualizarEncoder() {
+void atualizarEncoder()
+{
+    static int ultimoCLK = HIGH;
+    static unsigned long ultimoPulso = 0;
 
-    if (!encoder.encoderChanged())
-        return;
+    int clk = digitalRead(ENCODER_PINO_A);
 
-    ligarBacklight();
+    if (ultimoCLK == HIGH && clk == LOW)
+    {
+        if (millis() - ultimoPulso < 5)
+        {
+            ultimoCLK = clk;
+            return;
+        }
 
-    float passo = obterPassoVolume(volume_limite);
+        ultimoPulso = millis();
 
-    int valor = encoder.readEncoder();
+        ligarBacklight();
 
-    if (
-    estadoSistema == TIMER_OFF ||
-    estadoSistema == TIMER_ON ||
-    estadoSistema == TIMER_PAUSA
-) {
+        int direcao;
 
-    int valor = encoder.readEncoder();
+        if (digitalRead(ENCODER_PINO_B) != clk)
+            direcao = 1;
+        else
+            direcao = -1;
 
-    if (valor > 0)
-        incrementarTimer(1);
+        // =====================
+        // TIMER
+        // =====================
 
-    else
-        incrementarTimer(-1);
+        if (
+            estadoSistema == TIMER_OFF ||
+            estadoSistema == TIMER_ON ||
+            estadoSistema == TIMER_PAUSA
+        )
+        {
+            incrementarTimer(direcao);
 
-    encoder.setEncoderValue(0);
+            ultimoCLK = clk;
+            return;
+        }
 
-    return;
-}
+        // =====================
+        // BACKEND
+        // =====================
 
-    if (valor > 0) {
+        if (estadoSistema == BACKEND_MENU)
+        {
+            ultimoCLK = clk;
+            return;
+        }
 
-        volume_limite += passo;
+        // =====================
+        // VOLUME
+        // =====================
+
+        float passo =
+            obterPassoVolume(volume_limite);
+
+        volume_limite +=
+            direcao * passo;
+
+        if (volume_limite < 0)
+            volume_limite = 0;
     }
-    else {
 
-        volume_limite -= passo;
-    }
-
-    if (volume_limite < 0)
-        volume_limite = 0;
-
-    encoder.setEncoderValue(0);
+    ultimoCLK = clk;
 }
 
 // =========================
@@ -125,6 +150,8 @@ void atualizarEncoder() {
 // =========================
 
 void cliqueSimples() {
+
+    Serial.println("CLIQUE");
 
     ligarBacklight();
 
@@ -232,6 +259,8 @@ if (estadoSistema == TIMER_PAUSA) {
 
 void duploClique() {
 
+    Serial.println("DUPLO");
+
     ligarBacklight();
 
     if (estadoSistema == BACKEND_MENU) {
@@ -265,6 +294,8 @@ void duploClique() {
 
 void longPress() {
 
+    Serial.println("LONG");
+    
     ligarBacklight();
 
     if (estadoSistema == BACKEND_MENU) {
@@ -303,87 +334,91 @@ void longPress() {
 // BOTAO
 // =========================
 
-void controlarBotaoEncoder() {
-
+void controlarBotaoEncoder()
+{
     bool estadoBotao =
         digitalRead(ENCODER_PINO_BTN);
 
     static unsigned long backendPress = 0;
 
-if (
-    digitalRead(PINO_BOTAO_MANUAL) == LOW &&
-    digitalRead(ENCODER_PINO_BTN) == LOW
-) {
-
-    if (backendPress == 0)
-        backendPress = millis();
+    // =========================
+    // ENTRAR BACKEND
+    // =========================
 
     if (
-        millis() - backendPress
-            > 5000
-    ) {
+        digitalRead(PINO_BOTAO_MANUAL) == LOW &&
+        estadoBotao == LOW
+    )
+    {
+        if (backendPress == 0)
+            backendPress = millis();
 
-        entrarBackend();
+        if (
+            millis() - backendPress >= 5000
+        )
+        {
+            entrarBackend();
 
+            backendPress = 0;
+        }
+    }
+    else
+    {
         backendPress = 0;
     }
-}
-else {
-
-    backendPress = 0;
-}
 
     // =========================
-    // PRESSIONADO
+    // BOTAO PRESSIONADO
     // =========================
 
     if (
         ultimoEstadoBotao == HIGH &&
         estadoBotao == LOW
-    ) {
-
+    )
+    {
         tempoPressionado = millis();
     }
 
     // =========================
-    // SOLTO
+    // BOTAO SOLTO
     // =========================
 
     if (
         ultimoEstadoBotao == LOW &&
         estadoBotao == HIGH
-    ) {
-
+    )
+    {
         unsigned long tempoClique =
             millis() - tempoPressionado;
 
-        // =========================
+        // =====================
         // LONG PRESS
-        // =========================
+        // =====================
 
-        if (tempoClique >= TEMPO_LONG_PRESS) {
-
+        if (
+            tempoClique >= TEMPO_LONG_PRESS
+        )
+        {
             longPress();
         }
-
-        // =========================
-        // CLIQUE
-        // =========================
-
-        else {
+        else
+        {
+            // =================
+            // DUPLO CLIQUE
+            // =================
 
             if (
                 aguardandoDuploClique &&
-                millis() - ultimoClique
-                    <= TEMPO_DUPLO_CLIQUE
-            ) {
-
+                millis() - ultimoClique <=
+                TEMPO_DUPLO_CLIQUE
+            )
+            {
                 duploClique();
 
                 aguardandoDuploClique = false;
             }
-            else {
-
+            else
+            {
                 aguardandoDuploClique = true;
 
                 ultimoClique = millis();
@@ -392,15 +427,15 @@ else {
     }
 
     // =========================
-    // CLIQUE SIMPLES TIMEOUT
+    // CLIQUE SIMPLES
     // =========================
 
     if (
         aguardandoDuploClique &&
-        millis() - ultimoClique
-            > TEMPO_DUPLO_CLIQUE
-    ) {
-
+        millis() - ultimoClique >
+        TEMPO_DUPLO_CLIQUE
+    )
+    {
         cliqueSimples();
 
         aguardandoDuploClique = false;

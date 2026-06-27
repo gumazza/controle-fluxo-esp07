@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "globals.h"
+#include "valve_control.h"
 
 // =========================
 // PULSOS
@@ -59,6 +60,15 @@ void atualizarFluxo() {
 
     contadorPulsos = 0;
 
+    #ifdef USAR_MOSFET
+
+        if (pulsos > 0)
+        {
+            registrarFluxoDetectado();
+        }
+
+#endif
+
     interrupts();
 
     // =========================
@@ -71,23 +81,23 @@ void atualizarFluxo() {
     // Q = L/min
     // =========================
 
-    fluxo =
-        ((float)pulsos / 7.5);
+    float segundos = INTERVALO_FLUXO / 1000.0;
+
+    //float frequencia = pulsos / segundos;
+
+    fluxo = ((float)pulsos / fator_calibracao);
 
     // =========================
     // L/min -> L/s
     // =========================
 
-    float litrosSegundo =
-        fluxo / 60.0;
+    //float litrosSegundo = fluxo / 60.0;
 
     // =========================
     // VOLUME
     // =========================
 
-    volume =
-        litrosSegundo *
-        (INTERVALO_FLUXO / 1000.0);
+    volume = pulsos / fator_calibracao;
 
     // =========================
     // SOMA TOTAL
