@@ -1,8 +1,7 @@
 #include <Arduino.h>
 
 #include <ESP8266WiFi.h>
-
-#include <WiFiManager.h>
+#include <ArduinoJson.h>
 
 #include "wifi_control.h"
 #include "config.h"
@@ -10,15 +9,17 @@
 #include "web_interface.h"
 #include "ota_update.h"
 
-static WiFiManager wifiManager;
-
 static bool servicosRedeIniciados = false;
 
-static bool portalAtivo = false;
-
-static bool portalIniciado = false;
-
 static unsigned long ultimaTentativaWifi = 0;
+
+static unsigned long bootMs = 0;
+
+static bool staIniciado = false;
+
+static ScanWifiEstado scanEstado = SCAN_WIFI_IDLE;
+
+static int scanTotal = 0;
 
 static IPAddress ipAp() {
 
@@ -27,53 +28,53 @@ static IPAddress ipAp() {
 
 static bool apAtivo() {
 
-    return (
-        (WiFi.getMode() & WIFI_AP) &&
-        WiFi.softAPIP() != IPAddress(0, 0, 0, 0)
-    );
+    return WiFi.softAPIP() != IPAddress(0, 0, 0, 0);
 }
 
-static void garantirSoftAP() {
+static bool temCredenciaisSalvas() {
 
-    if (apAtivo() && WiFi.softAPSSID() == String(WIFI_AP_SSID)) {
-        return;
+    return WiFi.SSID().length() > 0;
+}
+
+static void aplicarModoWifi() {
+
+    if (temCredenciaisSalvas()) {
+        WiFi.mode(WIFI_AP_STA);
     }
+    else {
+        WiFi.mode(WIFI_AP);
+    }
+}
 
-    WiFi.softAPdisconnect(true);
+static void configurarSoftAP() {
 
     IPAddress ip = ipAp();
 
     WiFi.softAPConfig(ip, ip, IPAddress(255, 255, 255, 0));
 
-    WiFi.softAP(WIFI_AP_SSID, "");
+    WiFi.softAP(
+        WIFI_AP_SSID,
+        NULL,
+        WIFI_AP_CHANNEL,
+        false,
+        4
+    );
 }
 
-static void pararPortal() {
+static void garantirSoftAP() {
 
-    if (portalIniciado) {
-
-        wifiManager.stopConfigPortal();
-
-        portalIniciado = false;
-    }
-
-    portalAtivo = false;
-}
-
-static void pararServicosRede() {
-
-    if (!servicosRedeIniciados) {
+    if (apAtivo()) {
         return;
     }
 
-    pararWebServer();
+    aplicarModoWifi();
 
-    servicosRedeIniciados = false;
+    configurarSoftAP();
 }
 
 static void iniciarServicosRede() {
 
-    if (servicosRedeIniciados || portalAtivo) {
+    if (servicosRedeIniciados) {
         return;
     }
 
@@ -86,111 +87,108 @@ static void iniciarServicosRede() {
     marcarLcdSujo();
 }
 
-static void reiniciarServicosRede() {
+void restaurarSoftAP() {
 
-    pararServicosRede();
+    aplicarModoWifi();
 
-    iniciarServicosRede();
-}
-
-static void configurarWifiManager() {
-
-    wifiManager.setDebugOutput(false);
-
-    wifiManager.setConnectTimeout(WIFI_CONNECT_TIMEOUT);
-
-    wifiManager.setConfigPortalTimeout(WIFI_PORTAL_TIMEOUT);
-
-    wifiManager.setConfigPortalBlocking(false);
-
-    wifiManager.setBreakAfterConfig(true);
-
-    wifiManager.setCaptivePortalEnable(true);
-}
-
-void iniciarPortalConfiguracao() {
-
-    pararServicosRede();
-
-    configurarWifiManager();
-
-    garantirSoftAP();
-
-    if (!portalIniciado) {
-
-        wifiManager.startConfigPortal(WIFI_AP_SSID, "");
-
-        portalIniciado = true;
-    }
-
-    portalAtivo = true;
+    configurarSoftAP();
 }
 
 void iniciarWifi() {
+
+    bootMs = millis();
+
+    WiFi.persistent(true);
+
+    WiFi.setAutoReconnect(false);
+
+    WiFi.setSleepMode(WIFI_NONE_SLEEP);
+
+    WiFi.setOutputPower(20.5f);
+
+    WiFi.hostname(WIFI_AP_SSID);
+
+    WiFi.mode(WIFI_OFF);
+
+    delay(100);
+
+    aplicarModoWifi();
+
+    configurarSoftAP();
+
+    delay(300);
+
+    iniciarServicosRede();
+
+    Serial.print(F("AP: "));
+
+    Serial.print(WIFI_AP_SSID);
+
+    Serial.print(F(" @ "));
+
+    Serial.println(WiFi.softAPIP());
+}
+
+void atualizarWifi() {
+
+    atualizarScanWifi();
+
+    garantirSoftAP();
+
+    if (WiFi.status() == WL_CONNECTED) {
+        return;
+    }
+
+    if (!temCredenciaisSalvas()) {
+        return;
+    }
+
+    if (!staIniciado && millis() - bootMs >= 2500UL) {
+
+        WiFi.begin();
+
+        staIniciado = true;
+
+        ultimaTentativaWifi = millis();
+
+        return;
+    }
+
+    if (
+        staIniciado &&
+        millis() - ultimaTentativaWifi >= 60000UL
+    ) {
+
+        WiFi.begin();
+
+        ultimaTentativaWifi = millis();
+    }
+}
+
+bool conectarWifi(const char *ssid, const char *password) {
+
+    if (ssid == nullptr || ssid[0] == '\0') {
+        return false;
+    }
 
     WiFi.persistent(true);
 
     WiFi.mode(WIFI_AP_STA);
 
-    WiFi.setAutoReconnect(true);
+    configurarSoftAP();
 
-    WiFi.hostname(WIFI_AP_SSID);
-
-    garantirSoftAP();
-
-    if (WiFi.SSID().length() == 0) {
-
-        iniciarPortalConfiguracao();
-
-        return;
+    if (password != nullptr && password[0] != '\0') {
+        WiFi.begin(ssid, password);
+    }
+    else {
+        WiFi.begin(ssid);
     }
 
-    WiFi.begin();
+    staIniciado = true;
 
     ultimaTentativaWifi = millis();
-}
 
-void atualizarWifi() {
-
-    if (portalAtivo) {
-
-        if (!wifiManager.process()) {
-
-            portalIniciado = false;
-
-            portalAtivo = false;
-        }
-
-        if (WiFi.status() == WL_CONNECTED) {
-
-            pararPortal();
-
-            reiniciarServicosRede();
-        }
-
-        return;
-    }
-
-    garantirSoftAP();
-
-    if (WiFi.status() == WL_CONNECTED) {
-
-        iniciarServicosRede();
-
-        return;
-    }
-
-    iniciarPortalConfiguracao();
-
-    if (
-        WiFi.SSID().length() > 0 &&
-        millis() - ultimaTentativaWifi >= 30000UL
-    ) {
-
-        WiFi.reconnect();
-
-        ultimaTentativaWifi = millis();
-    }
+    return true;
 }
 
 bool wifiConectado() {
@@ -208,16 +206,168 @@ bool servicosRedeAtivos() {
     return servicosRedeIniciados;
 }
 
-bool portalConfiguracaoAtivo() {
+void obterInfoWifi(
+    char *ssid,
+    size_t ssidLen,
+    char *ipSta,
+    size_t ipStaLen,
+    char *ipAp,
+    size_t ipApLen,
+    int *rssi
+) {
 
-    return portalAtivo;
+    String rede = WiFi.SSID();
+
+    strncpy(ssid, rede.c_str(), ssidLen - 1);
+
+    ssid[ssidLen - 1] = '\0';
+
+    if (WiFi.status() == WL_CONNECTED) {
+
+        String ip = WiFi.localIP().toString();
+
+        strncpy(ipSta, ip.c_str(), ipStaLen - 1);
+
+        ipSta[ipStaLen - 1] = '\0';
+
+        if (rssi != nullptr) {
+            *rssi = WiFi.RSSI();
+        }
+    }
+    else {
+
+        ipSta[0] = '\0';
+
+        if (rssi != nullptr) {
+            *rssi = 0;
+        }
+    }
+
+    String ap = WiFi.softAPIP().toString();
+
+    strncpy(ipAp, ap.c_str(), ipApLen - 1);
+
+    ipAp[ipApLen - 1] = '\0';
 }
 
 void resetarWifi() {
 
-    pararServicosRede();
+    limparScanWifi();
 
-    pararPortal();
+    WiFi.disconnect(true);
 
-    wifiManager.resetSettings();
+    WiFi.persistent(true);
+
+    staIniciado = false;
+
+    WiFi.mode(WIFI_AP);
+
+    configurarSoftAP();
+}
+
+void iniciarScanWifi() {
+
+    if (scanEstado == SCAN_WIFI_RODANDO) {
+        return;
+    }
+
+    limparScanWifi();
+
+    WiFi.mode(WIFI_AP_STA);
+
+    configurarSoftAP();
+
+    WiFi.scanDelete();
+
+    int resultado = WiFi.scanNetworks(true, true);
+
+    if (resultado == WIFI_SCAN_RUNNING) {
+
+        scanEstado = SCAN_WIFI_RODANDO;
+    }
+    else if (resultado >= 0) {
+
+        scanTotal = resultado;
+
+        scanEstado = SCAN_WIFI_PRONTO;
+    }
+    else {
+
+        scanEstado = SCAN_WIFI_ERRO;
+
+        restaurarSoftAP();
+    }
+}
+
+void atualizarScanWifi() {
+
+    if (scanEstado != SCAN_WIFI_RODANDO) {
+        return;
+    }
+
+    int resultado = WiFi.scanComplete();
+
+    if (resultado == WIFI_SCAN_RUNNING) {
+        return;
+    }
+
+    if (resultado >= 0) {
+
+        scanTotal = resultado;
+
+        scanEstado = SCAN_WIFI_PRONTO;
+    }
+    else {
+
+        scanEstado = SCAN_WIFI_ERRO;
+    }
+
+    if (temCredenciaisSalvas()) {
+        WiFi.mode(WIFI_AP_STA);
+    }
+    else {
+        WiFi.mode(WIFI_AP);
+    }
+
+    configurarSoftAP();
+}
+
+ScanWifiEstado obterEstadoScanWifi() {
+
+    return scanEstado;
+}
+
+void adicionarRedesScan(JsonArray &redes, int limite) {
+
+    if (scanEstado != SCAN_WIFI_PRONTO || scanTotal <= 0) {
+        return;
+    }
+
+    int total = scanTotal;
+
+    if (total > limite) {
+        total = limite;
+    }
+
+    for (int i = 0; i < total; i++) {
+
+        if (WiFi.SSID(i).length() == 0) {
+            continue;
+        }
+
+        JsonObject rede = redes.add<JsonObject>();
+
+        rede["ssid"] = WiFi.SSID(i);
+        rede["rssi"] = WiFi.RSSI(i);
+        rede["secure"] = WiFi.encryptionType(i) != ENC_TYPE_NONE;
+    }
+}
+
+void limparScanWifi() {
+
+    WiFi.scanDelete();
+
+    scanEstado = SCAN_WIFI_IDLE;
+
+    scanTotal = 0;
 }

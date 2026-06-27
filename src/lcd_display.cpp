@@ -7,6 +7,7 @@
 #include "config.h"
 #include "system_state.h"
 #include "timer_control.h"
+#include "display_format.h"
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
@@ -19,25 +20,6 @@ bool lcdLigado = true;
 unsigned long ultimoLCD = 0;
 
 unsigned long ultimaInteracaoLCD = 0;
-
-// =========================
-// FORMATADORES
-// =========================
-
-static void formatarLitros(char* buffer, size_t size, float valor) {
-
-    if (valor < 1.0f) {
-        snprintf(buffer, size, "%1.3f", valor);
-    }
-    else {
-        snprintf(buffer, size, "%05.1f", valor);
-    }
-}
-
-static void formatarFluxo(char* buffer, size_t size, float valor) {
-
-    snprintf(buffer, size, "%05.1f", valor);
-}
 
 // =========================
 // LCD
