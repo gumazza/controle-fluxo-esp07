@@ -35,6 +35,7 @@
 #define TEMPO_LONG_PRESS       2000UL
 #define TEMPO_DUPLO_CLIQUE     400UL
 #define DEBOUNCE_ENCODER_MS    5UL
+#define ENCODER_INTERVALO_MAX_MS 350UL
 
 // =========================
 // SEGURANCA

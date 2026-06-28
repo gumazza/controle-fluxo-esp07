@@ -63,6 +63,22 @@ static void zerarVolumeSelecionado() {
     }
 }
 
+static unsigned long ultimoPulsoVolume = 0;
+
+static void ajustarVolumeLimite(int direcao, unsigned long intervaloMs) {
+
+    volume_limite = aplicarIncrementoSetpoint(
+        volume_limite,
+        calcularIncrementoVolume(
+            volume_limite,
+            direcao,
+            intervaloMs
+        )
+    );
+
+    marcarLcdSujo();
+}
+
 void iniciarEncoder() {
 
     pinMode(ENCODER_PINO_A, INPUT_PULLUP);
@@ -143,13 +159,22 @@ void atualizarEncoder() {
             return;
         }
 
-        float passo = obterPassoVolume(volume_limite);
+        unsigned long agora = millis();
 
-        volume_limite += direcao * passo;
+        unsigned long intervalo = ENCODER_INTERVALO_MAX_MS;
 
-        if (volume_limite < 0) {
-            volume_limite = 0;
+        if (ultimoPulsoVolume > 0) {
+
+            intervalo = agora - ultimoPulsoVolume;
+
+            if (intervalo > ENCODER_INTERVALO_MAX_MS) {
+                intervalo = ENCODER_INTERVALO_MAX_MS;
+            }
         }
+
+        ultimoPulsoVolume = agora;
+
+        ajustarVolumeLimite(direcao, intervalo);
     }
 
     ultimoCLK = clk;
@@ -418,15 +443,7 @@ void ajustarSetpoint(int direcao) {
         return;
     }
 
-    float passo = obterPassoVolume(volume_limite);
-
-    volume_limite += direcao * passo;
-
-    if (volume_limite < 0) {
-        volume_limite = 0;
-    }
+    ajustarVolumeLimite(direcao, ENCODER_INTERVALO_MAX_MS);
 
     ligarBacklight();
-
-    marcarLcdSujo();
 }

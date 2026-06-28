@@ -6,6 +6,7 @@
 
 #include "config.h"
 #include "globals.h"
+#include "fill_logic.h"
 
 struct Configuracoes {
 
@@ -57,7 +58,7 @@ static void aplicarDefaults() {
 
 static void restaurarGlobals() {
 
-    volume_limite = config.volumeLimite;
+    volume_limite = quantizarSetpointVolume(config.volumeLimite);
 
     fator_calibracao = config.fatorCalibracao;
 
