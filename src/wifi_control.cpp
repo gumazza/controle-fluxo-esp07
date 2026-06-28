@@ -7,7 +7,6 @@
 #include "config.h"
 #include "lcd_display.h"
 #include "web_interface.h"
-#include "ota_update.h"
 
 static bool servicosRedeIniciados = false;
 
@@ -79,8 +78,6 @@ static void iniciarServicosRede() {
     }
 
     iniciarWebServer();
-
-    iniciarOTA();
 
     servicosRedeIniciados = true;
 

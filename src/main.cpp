@@ -96,7 +96,9 @@ void loop() {
 
     atualizarWifi();
 
-    atualizarLCD();
+    if (!otaEmProgresso()) {
+        atualizarLCD();
+    }
 
     atualizarWebSocket();
 

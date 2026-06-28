@@ -14,6 +14,7 @@
 #include "timer_control.h"
 #include "web_index.h"
 #include "web_logo.h"
+#include "ota_update.h"
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -617,6 +618,8 @@ void iniciarWebServer() {
         return;
     }
 
+    iniciarOTA();
+
     server.begin();
 
     webServerIniciado = true;
@@ -635,7 +638,7 @@ void pararWebServer() {
 
 void atualizarWebSocket() {
 
-    if (!redeAtiva()) {
+    if (!redeAtiva() || otaEmProgresso()) {
         return;
     }
 
