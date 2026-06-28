@@ -102,10 +102,6 @@ void loop() {
 
     atualizarWebSocket();
 
-    if (servicosRedeAtivos()) {
-        atualizarOTA();
-    }
-
     verificarSalvarConfiguracoes();
 
     yield();
