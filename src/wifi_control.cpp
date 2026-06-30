@@ -53,7 +53,7 @@ static void configurarSoftAP() {
 
     WiFi.softAP(
         WIFI_AP_SSID,
-        NULL,
+        WIFI_AP_PASSWORD,
         WIFI_AP_CHANNEL,
         false,
         4

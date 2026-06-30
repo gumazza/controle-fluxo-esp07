@@ -65,10 +65,14 @@
 // WIFI
 // =========================
 
-#define WIFI_AP_SSID           "controle_volume"
+#define WIFI_AP_SSID           "Litrero"
+#define WIFI_AP_PASSWORD       "brew*lit"
 #define WIFI_AP_IP             192, 168, 4, 1
 #define WIFI_AP_CHANNEL        6
 #define WIFI_CONNECT_TIMEOUT   30UL
+
+#define WEB_REDE_USER          "Litrero"
+#define WEB_REDE_PASSWORD      "brew*lit"
 
 // =========================
 // WEB

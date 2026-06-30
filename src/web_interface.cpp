@@ -23,6 +23,17 @@ static bool webServerIniciado = false;
 
 static bool rotasRegistradas = false;
 
+static bool requerAuthRede(AsyncWebServerRequest *request) {
+
+    if (request->authenticate(WEB_REDE_USER, WEB_REDE_PASSWORD)) {
+        return true;
+    }
+
+    request->requestAuthentication("REDE");
+
+    return false;
+}
+
 static void adicionarInfoWifi(JsonDocument &doc) {
 
     char ssid[33];
@@ -176,6 +187,10 @@ static void registrarRotas() {
     server.on("/api/wifi/status", HTTP_GET,
         [](AsyncWebServerRequest *request) {
 
+            if (!requerAuthRede(request)) {
+                return;
+            }
+
             JsonDocument doc;
 
             adicionarInfoWifi(doc);
@@ -189,6 +204,10 @@ static void registrarRotas() {
 
     server.on("/api/wifi/scan", HTTP_GET,
         [](AsyncWebServerRequest *request) {
+
+            if (!requerAuthRede(request)) {
+                return;
+            }
 
             JsonDocument doc;
 
@@ -240,6 +259,10 @@ static void registrarRotas() {
         "/api/wifi/connect",
         HTTP_POST,
         [](AsyncWebServerRequest *request) {
+
+            if (!requerAuthRede(request)) {
+                return;
+            }
         },
         NULL,
         [](AsyncWebServerRequest *request,
@@ -251,6 +274,11 @@ static void registrarRotas() {
             static String corpo;
 
             if (index == 0) {
+
+                if (!requerAuthRede(request)) {
+                    return;
+                }
+
                 corpo = "";
             }
 

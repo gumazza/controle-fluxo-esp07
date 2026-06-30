@@ -107,12 +107,20 @@ header h1{font-size:1.1rem;color:#e8a838}
 </div>
 </section>
 <section id="page-rede" class="page">
-<div class="panel">
+<div id="redeLogin" class="panel">
+<h2>Acesso REDE</h2>
+<p class="wifi-st" style="margin-bottom:10px">Informe usuário e senha para configurar o Wi-Fi.</p>
+<div class="wifi-row"><input id="redeUser" type="text" placeholder="Usuário" autocomplete="username" value="Litrero"></div>
+<div class="wifi-row"><input id="redePass" type="password" placeholder="Senha" autocomplete="current-password"></div>
+<button id="btnRedeLogin" class="btn" type="button">Entrar</button>
+<div id="redeLoginMsg" class="msg"></div>
+</div>
+<div id="redePanel" class="panel" style="display:none">
 <h2>Rede Wi-Fi</h2>
 <div id="wifiIp" class="wifi-ip">IP: —</div>
-<div id="wifiSt" class="wifi-st">Rede aberta, sem senha · 192.168.4.1</div>
+<div id="wifiSt" class="wifi-st">AP Litrero · 192.168.4.1</div>
 <div class="wifi-row"><select id="wifiList"><option value="">Selecione a rede</option></select></div>
-<div class="wifi-row"><input id="wifiPass" type="password" placeholder="Senha da rede" autocomplete="off"></div>
+<div class="wifi-row"><input id="wifiPass" type="password" placeholder="Senha da rede externa" autocomplete="off"></div>
 <div class="wifi-row">
 <button id="btnScan" class="btn sec" type="button" style="width:auto;flex:1">Buscar</button>
 <button id="btnConnect" class="btn" type="button" style="width:auto;flex:1">Conectar</button>
@@ -150,13 +158,59 @@ header h1{font-size:1.1rem;color:#e8a838}
 <script>
 const $=id=>document.getElementById(id);
 let ws,tmr,page='home';
+const REDE_AUTH_KEY='redeAuth';
+function redeAuthHeaders(){
+const t=sessionStorage.getItem(REDE_AUTH_KEY);
+return t?{Authorization:'Basic '+t}:{};
+}
+function redeAuthToken(user,pass){
+return btoa(user+':'+pass);
+}
+async function redeFetch(url,opts={}){
+const headers={...redeAuthHeaders(),...(opts.headers||{})};
+return fetch(url,{...opts,headers});
+}
+function showRedeLogin(){
+$('redeLogin').style.display='block';
+$('redePanel').style.display='none';
+}
+function showRedePanel(){
+$('redeLogin').style.display='none';
+$('redePanel').style.display='block';
+}
+async function entrarRede(){
+const user=$('redeUser').value.trim(),pass=$('redePass').value,msg=$('redeLoginMsg');
+if(!user||!pass){msg.textContent='Informe usuário e senha';msg.className='msg err';return;}
+msg.textContent='Verificando...';msg.className='msg';
+try{
+const token=redeAuthToken(user,pass);
+const r=await fetch('/api/wifi/status',{headers:{Authorization:'Basic '+token}});
+if(r.status===401){msg.textContent='Usuário ou senha incorretos';msg.className='msg err';return;}
+if(!r.ok){msg.textContent='Falha ao autenticar';msg.className='msg err';return;}
+sessionStorage.setItem(REDE_AUTH_KEY,token);
+showRedePanel();
+wifiUi(await r.json());
+}catch(e){msg.textContent='Erro na conexão';msg.className='msg err';}
+}
+async function abrirRede(){
+if(sessionStorage.getItem(REDE_AUTH_KEY)){
+showRedePanel();
+try{
+const r=await redeFetch('/api/wifi/status');
+if(r.status===401){sessionStorage.removeItem(REDE_AUTH_KEY);showRedeLogin();return;}
+if(r.ok)wifiUi(await r.json());
+}catch(e){}
+}else{
+showRedeLogin();
+}
+}
 function showPage(p){
 page=p;
 document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
 document.querySelectorAll('.nav-btn').forEach(e=>e.classList.remove('active'));
 $('page-'+p).classList.add('active');
 document.querySelector('[data-page="'+p+'"]').classList.add('active');
-if(p==='rede')fetch('/api/wifi/status').then(r=>r.json()).then(wifiUi).catch(()=>{});
+if(p==='rede')abrirRede();
 if(p==='config')loadConfig();
 }
 document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
@@ -168,7 +222,7 @@ ip.textContent='IP na rede: '+d.wifi_ip;ip.className='wifi-ip ok';
 st.textContent='Conectado em '+d.wifi_ssid+(d.wifi_rssi?' ('+d.wifi_rssi+' dBm)':'');
 }else{
 ip.textContent='AP: '+(d.ap_ip||'192.168.4.1');ip.className='wifi-ip';
-st.textContent=d.wifi_ssid?'Tentando: '+d.wifi_ssid:'Rede aberta, sem senha · '+(d.ap_ip||'192.168.4.1');
+st.textContent=d.wifi_ssid?'Tentando: '+d.wifi_ssid:'AP Litrero · '+(d.ap_ip||'192.168.4.1');
 }}
 function rotuloValvula(estado){
 if(estado==='ENCHENDO')return 'Pausar';
@@ -258,7 +312,9 @@ msg.textContent='Timer cancelado';msg.className='msg ok';
 }
 async function pollScan(t){
 if(t>24){$('wifiMsg').textContent='Tempo esgotado';$('wifiMsg').className='msg err';return null;}
-const r=await fetch('/api/wifi/scan');const j=await r.json();
+const r=await redeFetch('/api/wifi/scan');
+if(r.status===401){sessionStorage.removeItem(REDE_AUTH_KEY);showRedeLogin();return null;}
+const j=await r.json();
 if(j.status==='scanning'){await new Promise(x=>setTimeout(x,500));return pollScan(t+1);}
 return j;
 }
@@ -279,7 +335,8 @@ const ssid=$('wifiList').value,pass=$('wifiPass').value,msg=$('wifiMsg'),btn=$('
 if(!ssid){msg.textContent='Selecione uma rede';msg.className='msg err';return;}
 btn.disabled=true;msg.textContent='Conectando...';msg.className='msg';
 try{
-const r=await fetch('/api/wifi/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ssid:ssid,password:pass})});
+const r=await redeFetch('/api/wifi/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ssid:ssid,password:pass})});
+if(r.status===401){sessionStorage.removeItem(REDE_AUTH_KEY);showRedeLogin();msg.textContent='Sessão expirada';msg.className='msg err';btn.disabled=false;return;}
 const j=await r.json();
 msg.textContent=j.ok?'Conectando... aguarde o IP acima':(j.error||'Falha ao conectar');
 msg.className=j.ok?'msg ok':'msg err';
@@ -324,6 +381,8 @@ ws.onmessage=e=>uiHome(JSON.parse(e.data));
 }
 $('btnScan').onclick=scanWifi;
 $('btnConnect').onclick=connectWifi;
+$('btnRedeLogin').onclick=entrarRede;
+$('redePass').onkeydown=e=>{if(e.key==='Enter')entrarRede();};
 $('btnValvula').onclick=cliqueValvula;
 $('btnZerar').onclick=zerarVolume;
 $('btnSetMenos').onclick=()=>ajustarSetpoint(-1);
