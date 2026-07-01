@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Manual de Operação — Litrero</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="manual_html.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Manual de Operação — Litrero</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<h2 id="toc-title">Índice</h2>
+<ul>
+<li><a href="#manual-de-operação-litrero"
+id="toc-manual-de-operação-litrero">Manual de Operação — Litrero</a>
+<ul>
+<li><a href="#apresentação" id="toc-apresentação">1.
+Apresentação</a></li>
+<li><a href="#principais-vantagens" id="toc-principais-vantagens">2.
+Principais vantagens</a></li>
+<li><a href="#visão-geral-do-painel" id="toc-visão-geral-do-painel">3.
+Visão geral do painel</a>
+<ul>
+<li><a href="#display-lcd-16-2" id="toc-display-lcd-16-2">3.1 Display
+LCD (16 × 2)</a></li>
+<li><a href="#encoder-rotativo-botão-rotação"
+id="toc-encoder-rotativo-botão-rotação">3.2 Encoder rotativo (botão +
+rotação)</a></li>
+<li><a href="#botão-manual-gpio0" id="toc-botão-manual-gpio0">3.3 Botão
+manual (GPIO0)</a></li>
+</ul></li>
+<li><a href="#operação-básica-enchimento-automático"
+id="toc-operação-básica-enchimento-automático">4. Operação básica —
+enchimento automático</a>
+<ul>
+<li><a href="#passo-a-passo" id="toc-passo-a-passo">Passo a
+passo</a></li>
+<li><a href="#durante-o-enchimento"
+id="toc-durante-o-enchimento">Durante o enchimento</a></li>
+</ul></li>
+<li><a href="#timer-de-enchimento" id="toc-timer-de-enchimento">5. Timer
+de enchimento</a>
+<ul>
+<li><a href="#pelo-painel-lcd" id="toc-pelo-painel-lcd">Pelo painel
+(LCD)</a></li>
+<li><a href="#pela-interface-web" id="toc-pela-interface-web">Pela
+interface web</a></li>
+</ul></li>
+<li><a href="#menu-backend-configuração-no-lcd"
+id="toc-menu-backend-configuração-no-lcd">6. Menu backend (configuração
+no LCD)</a></li>
+<li><a href="#monitoramento-de-vazão-e-calibração"
+id="toc-monitoramento-de-vazão-e-calibração">7. Monitoramento de vazão e
+calibração</a>
+<ul>
+<li><a href="#por-que-monitorar-a-vazão"
+id="toc-por-que-monitorar-a-vazão">Por que monitorar a vazão?</a></li>
+<li><a href="#calibração-do-sensor"
+id="toc-calibração-do-sensor">Calibração do sensor</a></li>
+</ul></li>
+<li><a href="#interface-web" id="toc-interface-web">8. Interface web</a>
+<ul>
+<li><a href="#como-acessar" id="toc-como-acessar">8.1 Como
+acessar</a></li>
+</ul></li>
+<li><a href="#segurança-na-conexão" id="toc-segurança-na-conexão">8.2
+Segurança na conexão</a></li>
+<li><a href="#aba-início" id="toc-aba-início">8.3 Aba INÍCIO</a></li>
+<li><a href="#aba-rede" id="toc-aba-rede">8.4 Aba REDE</a></li>
+<li><a href="#aba-config" id="toc-aba-config">8.5 Aba CONFIG</a></li>
+<li><a href="#proteções-e-mensagens-de-erro"
+id="toc-proteções-e-mensagens-de-erro">9. Proteções e mensagens de
+erro</a></li>
+<li><a href="#atualização-de-firmware-ota"
+id="toc-atualização-de-firmware-ota">10. Atualização de firmware
+(OTA)</a></li>
+<li><a href="#resumo-rápido-de-referência"
+id="toc-resumo-rápido-de-referência">11. Resumo rápido de referência</a>
+<ul>
+<li><a href="#wi-fi-e-web" id="toc-wi-fi-e-web">Wi-Fi e web</a></li>
+<li><a href="#enchimento-rápido" id="toc-enchimento-rápido">Enchimento
+rápido</a></li>
+<li><a href="#gestos-do-encoder" id="toc-gestos-do-encoder">Gestos do
+encoder</a></li>
+</ul></li>
+<li><a href="#suporte" id="toc-suporte">12. Suporte</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="manual-de-operação-litrero">Manual de Operação — Litrero</h1>
+<p><strong>Controle automático de volume de líquidos</strong><br />
+BREW Systems · MAZZA</p>
+<hr />
+<h2 id="apresentação">1. Apresentação</h2>
+<p>O <strong>Litrero</strong> é um controlador inteligente de enchimento
+que mede o volume de líquido em tempo real e comanda a válvula solenoide
+automaticamente. O equipamento foi projetado para processos que exigem
+<strong>precisão repetível</strong>, <strong>segurança
+operacional</strong> e <strong>facilidade de uso</strong> — no painel
+físico ou pelo celular/computador.</p>
+<p><img src="../include/VolControler.jpeg" alt="Equipamento Litrero" class="img-equipamento"></p>
+<hr />
+<h2 id="principais-vantagens">2. Principais vantagens</h2>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 77%" />
+</colgroup>
+<thead>
+<tr>
+<th>Vantagem</th>
+<th>O que isso significa na prática</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Medição precisa de volume</strong></td>
+<td>O sensor de fluxo integra litros passados com resolução adequada ao
+setpoint; o enchimento para exatamente no volume programado.</td>
+</tr>
+<tr>
+<td><strong>Controle automático</strong></td>
+<td>Basta definir o volume desejado e iniciar; a válvula abre, monitora
+a vazão e fecha ao atingir o alvo.</td>
+</tr>
+<tr>
+<td><strong>Monitoramento de vazão (L/min)</strong></td>
+<td>A leitura contínua permite ajustar pressão/bomba ou válvula para
+manter fluxo estável — essencial para <strong>filtros funcionarem de
+forma efetiva</strong></td>
+</tr>
+<tr>
+<td><strong>Operação local e remota</strong></td>
+<td>Display LCD + encoder no equipamento; interface web no celular com
+atualização em tempo real.</td>
+</tr>
+<tr>
+<td><strong>Timer de enchimento</strong></td>
+<td>Agende o início automático após um tempo de espera (útil em
+processos que precisam de repouso antes da inicialização).</td>
+</tr>
+<tr>
+<td><strong>Proteções de segurança</strong></td>
+<td>Watchdogs detectam ausência de fluxo ou enchimento excessivamente
+longo e fecham a válvula automaticamente.</td>
+</tr>
+<tr>
+<td><strong>Estatísticas</strong></td>
+<td>Contagem de ciclos e litros acumulados para acompanhamento de
+produção.</td>
+</tr>
+<tr>
+<td><strong>Atualização sem desmontar</strong></td>
+<td>Firmware atualizável via OTA (Over-The-Air) pela interface web.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="visão-geral-do-painel">3. Visão geral do painel</h2>
+<h3 id="display-lcd-16-2">3.1 Display LCD (16 × 2)</h3>
+<p>Na operação normal, o display mostra:</p>
+<table>
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 58%" />
+</colgroup>
+<thead>
+<tr>
+<th>Linha</th>
+<th>Conteúdo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Superior</strong></td>
+<td><strong>Setpoint</strong> (volume alvo, em litros) · indicador
+<strong>L/min</strong></td>
+</tr>
+<tr>
+<td><strong>Inferior</strong></td>
+<td><strong>Volume atual</strong> acumulado · <strong>Vazão
+instantânea</strong> (L/min)</td>
+</tr>
+</tbody>
+</table>
+<p>Exemplo conceitual:</p>
+<pre><code> 20.0L     L/min
+  8.5L    012.3</code></pre>
+<ul>
+<li><strong>Setpoint</strong> (topo, esquerda): volume que se deseja
+encher.</li>
+<li><strong>Volume atual</strong> (baixo, esquerda): litros já
+transferidos no ciclo em andamento.</li>
+<li><strong>Vazão</strong> (baixo, direita): fluxo instantâneo — use
+para calibrar bomba/pressão e validar o comportamento do filtro.</li>
+</ul>
+<p>O backlight desliga após <strong>2 minutos</strong> sem interação e
+religa ao girar o encoder ou pressionar botões.</p>
+<h3 id="encoder-rotativo-botão-rotação">3.2 Encoder rotativo (botão +
+rotação)</h3>
+<table>
+<colgroup>
+<col style="width: 46%" />
+<col style="width: 53%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gesto</th>
+<th>Função</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Girar</strong></td>
+<td>Ajusta o setpoint de volume (em STANDBY, ENCHENDO ou PAUSADO)</td>
+</tr>
+<tr>
+<td><strong>Clique</strong></td>
+<td>Inicia enchimento · Pausa · Retoma · Confirma ações no
+backend/timer</td>
+</tr>
+<tr>
+<td><strong>Duplo clique</strong></td>
+<td>Entra no modo <strong>zerar</strong> (setpoint ou volume total
+piscam)</td>
+</tr>
+<tr>
+<td><strong>Pressionar 2 s</strong></td>
+<td>Entra no <strong>menu backend</strong> (STANDBY/ERRO) · Sai do timer
+· Sai do backend</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Passos de ajuste do setpoint</strong> (rotação lenta):</p>
+<table>
+<thead>
+<tr>
+<th>Faixa do setpoint</th>
+<th>Incremento por passo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt; 1 L</td>
+<td>0,01 L</td>
+</tr>
+<tr>
+<td>1 L a 5 L</td>
+<td>0,1 L</td>
+</tr>
+<tr>
+<td>5 L a 10 L</td>
+<td>0,5 L</td>
+</tr>
+<tr>
+<td>≥ 10 L</td>
+<td>1,0 L</td>
+</tr>
+</tbody>
+</table>
+<p>Girar <strong>mais rápido</strong> aumenta o passo (até 5× o valor
+base) para ajustes ágeis em volumes grandes.</p>
+<h3 id="botão-manual-gpio0">3.3 Botão manual (GPIO0)</h3>
+<p>Pressionar e <strong>manter</strong> o botão manual abre a válvula em
+<strong>modo manual</strong> (sem contagem automática de ciclo
+completo). Solte para fechar. Útil para purgas, testes ou fluxo contínuo
+curto.</p>
+<p>Em estado de <strong>ERRO</strong>, pressionar o botão manual também
+permite <strong>limpar o erro</strong> e voltar ao STANDBY.</p>
+<hr />
+<h2 id="operação-básica-enchimento-automático">4. Operação básica —
+enchimento automático</h2>
+<h3 id="passo-a-passo">Passo a passo</h3>
+<ol type="1">
+<li><strong>Ligue</strong> o equipamento e aguarde a inicialização no
+display.</li>
+<li><strong>Gire o encoder</strong> até o setpoint desejado (ex.:
+<code>20.0 L</code>). O setpoint deve ser <strong>maior que
+zero</strong> para iniciar.</li>
+<li><strong>Posicione</strong> mangueiras, válvulas auxiliares e filtro
+conforme o processo.</li>
+<li><strong>Observe a vazão</strong> no display ou na web antes/durante
+o enchimento — ajuste bomba ou pressão para manter fluxo estável dentro
+da faixa recomendada do seu filtro.</li>
+<li><strong>Clique</strong> no encoder para <strong>iniciar</strong> →
+estado <strong>ENCHENDO</strong>; a válvula abre e o volume começa a
+contar a partir de zero.</li>
+<li>Ao atingir o setpoint, a válvula <strong>fecha
+automaticamente</strong>, o ciclo encerra e um <strong>pulso no
+optoacoplador</strong> sinaliza conclusão (integração com outros
+equipamentos, se aplicável).</li>
+<li>O equipamento retorna ao <strong>STANDBY</strong>, pronto para o
+próximo ciclo.</li>
+</ol>
+<h3 id="durante-o-enchimento">Durante o enchimento</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 66%" />
+</colgroup>
+<thead>
+<tr>
+<th>Ação</th>
+<th>Como fazer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pausar</strong></td>
+<td>Clique no encoder → estado <strong>PAUSADO</strong> (válvula
+fecha)</td>
+</tr>
+<tr>
+<td><strong>Retomar</strong></td>
+<td>Clique novamente → <strong>ENCHENDO</strong> (se ainda não atingiu o
+setpoint)</td>
+</tr>
+<tr>
+<td><strong>Ajustar setpoint</strong></td>
+<td>Gire o encoder (possível em ENCHENDO/PAUSADO)</td>
+</tr>
+<tr>
+<td><strong>Zerar volume acumulado</strong></td>
+<td>Duplo clique → selecione setpoint ou total (girar) → clique para
+zerar · duplo clique cancela</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="timer-de-enchimento">5. Timer de enchimento</h2>
+<p>O timer inicia o enchimento automaticamente após uma contagem
+regressiva.</p>
+<h3 id="pelo-painel-lcd">Pelo painel (LCD)</h3>
+<ol type="1">
+<li>Em <strong>STANDBY</strong>, pressione
+<strong>simultaneamente</strong> o <strong>botão manual</strong> e o
+<strong>botão do encoder</strong> por <strong>2 segundos</strong>.</li>
+<li>O display mostra <strong>TIMER OFF</strong> e o tempo
+configurado.</li>
+<li><strong>Gire o encoder</strong> para ajustar o tempo:
+<ul>
+<li>Até 1 h: passos de <strong>10 s</strong></li>
+<li>Acima de 1 h: passos de <strong>5 min</strong></li>
+</ul></li>
+<li><strong>Clique</strong> para iniciar a contagem (<strong>TIMER
+ON</strong>).</li>
+<li><strong>Clique</strong> novamente para <strong>pausar</strong>
+(<strong>TIMER PAUSA</strong>); clique para
+<strong>retomar</strong>.</li>
+<li><strong>Pressione 2 s</strong> o encoder para
+<strong>cancelar</strong> o timer e voltar ao STANDBY.</li>
+<li>Ao chegar a <strong>zero</strong>, o enchimento inicia
+automaticamente (se setpoint &gt; 0).</li>
+</ol>
+<h3 id="pela-interface-web">Pela interface web</h3>
+<p>Use o bloco <strong>Timer</strong> na aba <strong>INÍCIO</strong>
+(ajustar, iniciar, pausar, cancelar) — ver seção 8.</p>
+<hr />
+<h2 id="menu-backend-configuração-no-lcd">6. Menu backend (configuração
+no LCD)</h2>
+<p>Acesso: em <strong>STANDBY</strong> ou <strong>ERRO</strong>,
+<strong>pressione o encoder por 2 segundos</strong>.</p>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>Função</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CALIB SENSOR</strong></td>
+<td>Fator de calibração do sensor YF-S201 (padrão 7,5). Clique entra em
+edição; gire para ajustar; pressione 2 s para salvar.</td>
+</tr>
+<tr>
+<td><strong>RESET STATS</strong></td>
+<td>Zera ciclos e litros acumulados. Duplo clique → confirmar →
+clique.</td>
+</tr>
+<tr>
+<td><strong>RESET WIFI</strong></td>
+<td>Apaga rede Wi-Fi salva e reinicia. Duplo clique → confirmar →
+clique.</td>
+</tr>
+<tr>
+<td><strong>REBOOT ESP</strong></td>
+<td>Reinicia o controlador. Duplo clique → confirmar → clique.</td>
+</tr>
+<tr>
+<td><strong>ERRO SEM FLUXO</strong></td>
+<td>Timeout sem fluxo com válvula aberta (padrão 5 s, 1–60 s).</td>
+</tr>
+<tr>
+<td><strong>ERRO ENCHIMENTO</strong></td>
+<td>Timeout máximo de enchimento (padrão 20 min, 1–120 min).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sair do backend:</strong> pressione o encoder <strong>2
+segundos</strong> (fora do modo edição).</p>
+<hr />
+<h2 id="monitoramento-de-vazão-e-calibração">7. Monitoramento de vazão e
+calibração</h2>
+<h3 id="por-que-monitorar-a-vazão">Por que monitorar a vazão?</h3>
+<p>Filtros (cartucho, plate, lenticular, etc.) têm <strong>faixa de
+fluxo recomendada</strong>. Fluxo muito alto reduz eficiência e pode
+danificar o elemento filtrante; fluxo muito baixo prolonga o processo e
+altera o perfil de filtração.</p>
+<p>O Litrero exibe <strong>L/min em tempo real</strong> no LCD e na
+interface web. Use essa leitura para:</p>
+<ul>
+<li>Ajustar velocidade da bomba ou pressão, ou fechamento da válvula
+após o controlador.</li>
+<li>Repetir enchimentos com <strong>mesmo perfil de fluxo</strong> entre
+lotes.</li>
+<li>Identificar entupimento parcial (queda de vazão com pressão
+constante).</li>
+<li>Validar calibração após manutenção no sensor ou nas mangueiras.</li>
+</ul>
+<h3 id="calibração-do-sensor">Calibração do sensor</h3>
+<p>Sensor padrão: <strong>YF-S201</strong>. Relação teórica:</p>
+<pre><code>Frequência (Hz) ≈ 7,5 × Q (L/min)
+Volume (L) = pulsos / fator_calibracao / 60</code></pre>
+<p>O fator padrão <strong>7,5</strong> pode ser ajustado no backend
+(LCD) ou na aba <strong>CONFIG</strong> da web. Compare volume indicado
+com medida de referência (balança ou recipiente graduado) e ajuste o
+fator até coincidir.</p>
+<hr />
+<section id="interface-web" class="bloco-acesso-web">
+<h2>8. Interface web</h2>
+<p>O controlador disponibiliza uma interface responsiva, otimizada para
+celular, com três abas principais.</p>
+<p><img src="../include/Interface_Web.jpeg" alt="Interface Web" class="img-interface-web"></p>
+<h3 id="como-acessar">8.1 Como acessar</h3>
+<ol type="1">
+<li><p>Ligue o Litrero.</p></li>
+<li><p>No celular ou computador, abra <strong>Configurações →
+Wi-Fi</strong>.</p></li>
+<li><p>Conecte-se à rede do equipamento:</p>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nome da rede (SSID)</strong></td>
+<td><code>Litrero</code></td>
+</tr>
+<tr>
+<td><strong>Senha</strong></td>
+<td><code>brew*lit</code></td>
+</tr>
+</tbody>
+</table></li>
+<li><p>Abra o navegador e acesse:</p>
+<pre><code>http://192.168.4.1</code></pre></li>
+<li><p>O indicador <strong>Online</strong> (canto superior) confirma
+conexão WebSocket ativa — dados atualizados automaticamente a cada 0,5
+s.</p></li>
+</ol>
+<blockquote>
+<p><strong>Obs.:</strong> O equipamento mantém o ponto de acesso
+<strong>Litrero</strong> sempre ativo. Se uma rede externa (ex.: Wi-Fi
+da cervejaria) estiver configurada, o controlador opera em modo AP + STA
+e pode ser acessado também pelo IP da rede local (exibido na aba REDE
+após login).</p>
+</blockquote>
+</section>
+<h3 id="segurança-na-conexão">8.2 Segurança na conexão</h3>
+<p>A rede <strong>Litrero</strong> é <strong>protegida por senha
+WPA2</strong> (<code>brew*lit</code>), evitando que terceiros se
+conectem acidentalmente ou interceptem o controle do equipamento na
+cervejaria.</p>
+<p>Camadas adicionais:</p>
+<table>
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr>
+<th>Recurso</th>
+<th>Proteção</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Rede Wi-Fi do equipamento</strong></td>
+<td>SSID + senha obrigatórios</td>
+</tr>
+<tr>
+<td><strong>Aba REDE</strong> (scan e conexão a redes externas)</td>
+<td>Login <strong>HTTP Basic Auth</strong> — usuário
+<code>Litrero</code>, senha <code>brew*lit</code></td>
+</tr>
+<tr>
+<td><strong>Abas INÍCIO e CONFIG</strong></td>
+<td>Acessíveis após conectar na rede (operação do dia a dia)</td>
+</tr>
+<tr>
+<td><strong>Sessão REDE</strong></td>
+<td>Credenciais guardadas no navegador até fechar a aba/sessão</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Boas práticas:</strong></p>
+<ul>
+<li>Não divulgue a senha <code>brew*lit</code> fora da equipe
+autorizada.</li>
+<li>Prefira rede <strong>Litrero</strong> dedicada ao equipamento
+durante operação; configure Wi-Fi externo apenas se necessário para
+integração.</li>
+<li>Após alterar configurações sensíveis, use <strong>Reset
+Wi-Fi</strong> (backend ou web) se suspeitar de acesso indevido.</li>
+</ul>
+<h3 id="aba-início">8.3 Aba INÍCIO</h3>
+<table>
+<colgroup>
+<col style="width: 55%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>Elemento</th>
+<th>Função</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Volume</strong></td>
+<td>Litros acumulados no ciclo atual</td>
+</tr>
+<tr>
+<td><strong>Fluxo (L/min)</strong></td>
+<td>Vazão instantânea — monitore para ajuste de filtro/bomba</td>
+</tr>
+<tr>
+<td><strong>Barra de progresso</strong></td>
+<td>Proporção volume / setpoint</td>
+</tr>
+<tr>
+<td><strong>Setpoint ±</strong></td>
+<td>Ajuste fino do volume alvo</td>
+</tr>
+<tr>
+<td><strong>Timer</strong></td>
+<td>Configurar, iniciar, pausar e cancelar contagem regressiva</td>
+</tr>
+<tr>
+<td><strong>Liberar válvula</strong></td>
+<td>Equivalente ao clique do encoder (iniciar/pausar/retomar/limpar
+erro)</td>
+</tr>
+<tr>
+<td><strong>Zerar volume total</strong></td>
+<td>Zera contagem do ciclo atual</td>
+</tr>
+</tbody>
+</table>
+<p>Estados exibidos: STANDBY, ENCHENDO, PAUSADO, TIMER, ERRO SEM FLUXO,
+ERRO TIMEOUT, etc.</p>
+<h3 id="aba-rede">8.4 Aba REDE</h3>
+<p>Requer login (<strong>Litrero</strong> / **brew*lit**).</p>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>Função</th>
+<th>Descrição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Status</strong></td>
+<td>IP do AP (<code>192.168.4.1</code>) ou IP na rede externa quando
+conectado</td>
+</tr>
+<tr>
+<td><strong>Buscar</strong></td>
+<td>Scan de redes Wi-Fi disponíveis</td>
+</tr>
+<tr>
+<td><strong>Conectar</strong></td>
+<td>Associa o equipamento a uma rede externa (informe a senha da rede
+escolhida)</td>
+</tr>
+</tbody>
+</table>
+<p>Use esta aba para integrar o controlador à rede fixa da cervejaria
+mantendo o AP <strong>Litrero</strong> ativo como fallback.</p>
+<h3 id="aba-config">8.5 Aba CONFIG</h3>
+<table>
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 61%" />
+</colgroup>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Descrição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Calib. sensor</strong></td>
+<td>Fator de calibração (1,0 – 20,0)</td>
+</tr>
+<tr>
+<td><strong>ERRO sem fluxo (s)</strong></td>
+<td>Tempo máximo com válvula aberta sem fluxo detectado</td>
+</tr>
+<tr>
+<td><strong>ERRO enchimento (min)</strong></td>
+<td>Tempo máximo total de um ciclo de enchimento</td>
+</tr>
+<tr>
+<td><strong>Ciclos / Litros acumulados</strong></td>
+<td>Estatísticas de uso</td>
+</tr>
+<tr>
+<td><strong>Atualização OTA</strong></td>
+<td>Link para enviar novo <code>firmware.bin</code></td>
+</tr>
+<tr>
+<td><strong>Reset estatísticas</strong></td>
+<td>Zera contadores</td>
+</tr>
+<tr>
+<td><strong>Reset Wi-Fi</strong></td>
+<td>Apaga credenciais salvas e reinicia</td>
+</tr>
+<tr>
+<td><strong>Reiniciar ESP</strong></td>
+<td>Reinício a frio do controlador</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="proteções-e-mensagens-de-erro">9. Proteções e mensagens de
+erro</h2>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 20%" />
+<col style="width: 51%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mensagem</th>
+<th>Causa</th>
+<th>Ação recomendada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ERRO SEM FLUXO</strong></td>
+<td>Válvula aberta, mas nenhum fluxo detectado dentro do timeout</td>
+<td>Verifique bomba, torneira, ar na linha, sensor desconectado. Clique
+no encoder ou botão manual para limpar.</td>
+</tr>
+<tr>
+<td><strong>ERRO TIMEOUT</strong></td>
+<td>Enchimento excedeu o tempo máximo configurado</td>
+<td>Verifique vazamento, setpoint irreal, obstrução. Ajuste <strong>ERRO
+ENCHIMENTO</strong> no backend se o processo legítimo for mais
+longo.</td>
+</tr>
+<tr>
+<td><strong>Não inicia enchimento</strong></td>
+<td>Setpoint = 0 L</td>
+<td>Defina volume &gt; 0 antes de iniciar.</td>
+</tr>
+</tbody>
+</table>
+<p>Em qualquer erro, a válvula é <strong>fechada
+automaticamente</strong> por segurança.</p>
+<hr />
+<h2 id="atualização-de-firmware-ota">10. Atualização de firmware
+(OTA)</h2>
+<ol type="1">
+<li>Acesse <code>http://192.168.4.1</code> conectado à rede
+<strong>Litrero</strong>.</li>
+<li>Aba <strong>CONFIG</strong> → <strong>Abrir atualização OTA</strong>
+(ou <code>/update</code> diretamente).</li>
+<li>Selecione o arquivo <strong><code>firmware.bin</code></strong>
+fornecido pela BREW Systems.</li>
+<li>Aguarde a gravação e o reinício automático.</li>
+</ol>
+<p>A página OTA exibe flash, tamanho do sketch e espaço disponível para
+validação antes do upload.</p>
+<hr />
+<h2 id="resumo-rápido-de-referência">11. Resumo rápido de
+referência</h2>
+<h3 id="wi-fi-e-web">Wi-Fi e web</h3>
+<pre><code>Rede:     Litrero
+Senha:    brew*lit
+Endereço: http://192.168.4.1
+Login aba REDE: Litrero / brew*lit</code></pre>
+<h3 id="enchimento-rápido">Enchimento rápido</h3>
+<pre><code>Girar encoder → setpoint → Clique → monitorar vazão → aguardar parada automática</code></pre>
+<h3 id="gestos-do-encoder">Gestos do encoder</h3>
+<pre><code>Girar        = ajustar volume
+Clique       = iniciar / pausar / retomar
+Duplo clique = zerar setpoint ou volume
+Long press   = menu backend (ou sair do timer)
+Manual + encoder 2 s = modo timer</code></pre>
+<hr />
+<h2 id="suporte">12. Suporte</h2>
+<p>Projeto desenvolvido por <strong>MAZZA Handmade</strong> para
+<strong>BREW Systems</strong>.</p>
+<p>Para calibração avançada, atualizações de firmware ou dúvidas sobre
+integração com filtros e linhas de transferência, consulte a equipe
+técnica BREW Systems.</p>
+<hr />
+<p><em>Documento gerado para firmware Litrero · Rede Litrero · Interface
+web em tempo real.</em></p>
+</body>
+</html>

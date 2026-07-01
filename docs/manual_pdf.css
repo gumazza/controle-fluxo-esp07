@@ -1,0 +1,250 @@
+@page {
+    margin: 18mm 16mm 20mm 16mm;
+}
+
+body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    color: #1a1a2e;
+    max-width: 100%;
+}
+
+h1 {
+    font-size: 20pt;
+    color: #0f3460;
+    border-bottom: 2px solid #e8a838;
+    padding-bottom: 6px;
+    margin-top: 0;
+}
+
+h2 {
+    font-size: 13pt;
+    color: #0f3460;
+    margin-top: 1.4em;
+    page-break-after: avoid;
+}
+
+h3 {
+    font-size: 11pt;
+    color: #16213e;
+    margin-top: 1em;
+    page-break-after: avoid;
+}
+
+p, li {
+    orphans: 3;
+    widows: 3;
+}
+
+table {
+    width: max-content;
+    max-width: 100%;
+    table-layout: auto;
+    border-collapse: collapse;
+    margin: 0.8em 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+}
+
+colgroup {
+    display: none;
+}
+
+th, td {
+    border: 1px solid #c5d0de;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+    white-space: normal;
+}
+
+th {
+    background: #16213e;
+    color: #eaeaea;
+}
+
+tr:nth-child(even) td {
+    background: #f4f7fb;
+}
+
+code, pre {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 9pt;
+}
+
+pre {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    background: #f0f4f8;
+    border: 1px solid #d8e0ea;
+    border-radius: 4px;
+    padding: 10px 12px;
+    white-space: pre-wrap;
+    page-break-inside: avoid;
+}
+
+blockquote {
+    width: fit-content;
+    max-width: 100%;
+    border-left: 3px solid #e8a838;
+    margin: 0.8em 0;
+    padding: 0.4em 12px 0.4em 12px;
+    color: #444;
+    background: #faf6ee;
+}
+
+img {
+    display: block;
+    height: auto;
+    margin: 12px auto;
+    border: 1px solid #d8e0ea;
+    border-radius: 6px;
+    page-break-inside: avoid;
+}
+
+img.img-equipamento {
+    max-width: 85%;
+}
+
+img.img-interface-web {
+    max-width: 35%;
+}
+
+.bloco-acesso-web {
+    margin: 0.8em 0 1.2em;
+}
+
+.bloco-acesso-web h2 {
+    margin-top: 0;
+    margin-bottom: 0.35em;
+    page-break-after: avoid;
+}
+
+.bloco-acesso-web > p {
+    margin-top: 0;
+    margin-bottom: 0.6em;
+}
+
+.bloco-acesso-web h3 {
+    margin-top: 0.5em;
+    margin-bottom: 0.35em;
+    page-break-after: avoid;
+}
+
+.bloco-acesso-web ol {
+    margin: 0.35em 0;
+    padding-left: 1.4em;
+}
+
+.bloco-acesso-web blockquote {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+}
+
+@media print {
+    .bloco-acesso-web {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        page-break-before: auto;
+    }
+
+    .bloco-acesso-web img.img-interface-web {
+        max-width: 26%;
+        margin: 4px auto 6px;
+    }
+
+    .bloco-acesso-web h2 {
+        font-size: 12pt;
+    }
+
+    .bloco-acesso-web h3 {
+        margin-top: 0.3em;
+        font-size: 10.5pt;
+    }
+
+    .bloco-acesso-web ol,
+    .bloco-acesso-web blockquote,
+    .bloco-acesso-web > p {
+        font-size: 9pt;
+        line-height: 1.35;
+    }
+
+    .bloco-acesso-web table {
+        font-size: 8.5pt;
+    }
+}
+
+/* HTML no navegador */
+@media screen {
+    img.img-equipamento {
+        max-width: 50%;
+    }
+
+    .bloco-acesso-web img.img-interface-web {
+        max-width: 32%;
+    }
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #d8e0ea;
+    margin: 1.2em 0;
+}
+
+strong {
+    color: #0f3460;
+}
+
+.header-meta {
+    color: #555;
+    margin-bottom: 1.5em;
+}
+
+#TOC {
+    background: #f4f7fb;
+    border: 1px solid #d8e0ea;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 1.2em 0 1.8em;
+    page-break-after: always;
+    width: fit-content;
+    max-width: 100%;
+}
+
+#TOC > h2,
+#TOC > h1 {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #0f3460;
+    margin: 0 0 0.6em;
+    border: none;
+    padding: 0;
+}
+
+#TOC > ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+#TOC ul ul {
+    list-style: none;
+    padding-left: 1.2em;
+    margin: 0.15em 0;
+}
+
+#TOC li {
+    margin: 0.25em 0;
+    line-height: 1.35;
+}
+
+#TOC a {
+    color: #0f3460;
+    text-decoration: none;
+}
+
+#TOC a:hover {
+    text-decoration: underline;
+}

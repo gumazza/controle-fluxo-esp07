@@ -1,0 +1,9 @@
+@import url("manual_pdf.css");
+
+/* Visualização HTML: reforça 50% nas duas imagens */
+@media screen {
+    img.img-equipamento,
+    img.img-interface-web {
+        max-width: 50%;
+    }
+}
